@@ -502,6 +502,34 @@ label input:enabled {
 
 .hidden { display: none; }
 
+.telegram-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #0088cc;
+        color: white;
+        font-size: 18px;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        width: 100%;
+        max-width: 200px;
+        margin: auto;
+    }
+
+    .telegram-button img {
+        width: 32px;
+        height: 32px;
+        margin-right: 12px;
+    }
+
+    .telegram-button:hover {
+        background-color: #0077b5;
+        transform: scale(1.05);
+    }
+    
 #balance-display {
     position: fixed;
     top: 10px;
@@ -682,7 +710,10 @@ label input:enabled {
 
     <div class="social-settings">
         <h3>Соц-сети</h3>
-        <button class="promo" onclick="window.open('https://t.me/ViGame_official', '_blank')">🗞️ Телеграм</button>
+        <button class="telegram-button" onclick="window.open('https://t.me/ViGame_official', '_blank')">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram">
+    Перейти в Telegram
+</button>
     </div>
 
     <div class="menu-buttons">
