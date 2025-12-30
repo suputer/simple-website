@@ -1,0 +1,3368 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vihodilka</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%);
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            padding: 15px;
+            overflow: hidden;
+            touch-action: manipulation;
+            position: relative;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+            color: #ffffff;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+        
+        .subtitle {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            margin-bottom: 8px;
+            font-weight: 400;
+        }
+        
+        /* Кнопка переключателя звука - САМАЯ ПРАВАЯ */
+        .sound-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: rgba(60, 60, 70, 0.8);
+            border: 1px solid rgba(100, 100, 120, 0.3);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 50;
+        }
+        
+        /* Кнопка профиля - СЛЕВА ОТ ЛИДЕРБОРДА */
+        .profile-btn {
+            position: absolute;
+            top: 0;
+            right: 50px;
+            background: rgba(60, 60, 70, 0.8);
+            border: 1px solid rgba(100, 100, 120, 0.3);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 50;
+        }
+        
+        /* Кнопка артефактов - СЛЕВА ОТ ПРОФИЛЯ */
+        .artifacts-btn {
+            position: absolute;
+            top: 0;
+            right: 275px;
+            background: rgba(60, 60, 70, 0.8);
+            border: 1px solid rgba(100, 100, 120, 0.3);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 50;
+        }
+        
+        /* Кнопка лидерборда - ЕЩЕ ЛЕВЕЕ */
+        .leaderboard-btn {
+            position: absolute;
+            top: 0;
+            right: 325px;
+            background: rgba(60, 60, 70, 0.8);
+            border: 1px solid rgba(100, 100, 120, 0.3);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 50;
+        }
+        
+        .profile-btn:hover, .leaderboard-btn:hover, .sound-toggle:hover, .artifacts-btn:hover {
+            background: rgba(80, 80, 90, 0.9);
+        }
+        
+        .profile-btn i, .leaderboard-btn i, .sound-toggle i, .artifacts-btn i {
+            font-size: 1.2rem;
+            color: #e0e0e0;
+        }
+        
+        .sound-toggle.muted .fa-volume-up {
+            display: none;
+        }
+        
+        .sound-toggle.muted .fa-volume-mute {
+            display: block;
+        }
+        
+        .sound-toggle:not(.muted) .fa-volume-up {
+            display: block;
+        }
+        
+        .sound-toggle:not(.muted) .fa-volume-mute {
+            display: none;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            background: rgba(40, 40, 40, 0.8);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .moves-count {
+            color: #4ecdc4;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+        
+        .score-count {
+            color: #ffd700;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+        
+        .total-score-count {
+            color: #a78bfa;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 500px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            background-color: rgba(30, 30, 30, 0.9);
+        }
+        
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            gap: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+        }
+        
+        .tile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: transform 0.1s ease;
+            position: relative;
+            overflow: hidden;
+            border: 0.5px solid rgba(40, 40, 50, 0.5);
+        }
+        
+        .tile:active {
+            transform: scale(0.98);
+        }
+        
+        .empty {
+            background: rgba(50, 50, 60, 0.7);
+        }
+        
+        .player {
+            background: #ff6b6b;
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+            z-index: 10;
+            position: relative;
+            width: 65%;
+            height: 65%;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .player::after {
+            content: '';
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            top: 25%;
+            left: 25%;
+        }
+        
+        .add-moves {
+            background: rgba(100, 149, 237, 0.85);
+            color: white;
+        }
+        
+        .remove-moves {
+            background: rgba(255, 140, 0, 0.85);
+            color: white;
+        }
+        
+        .goal {
+            background: rgba(46, 204, 113, 0.9);
+            box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.2);
+        }
+        
+        .goal::after {
+            content: '★';
+            position: absolute;
+            font-size: 1.2rem;
+            color: white;
+            text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .diamond {
+            background: rgba(255, 215, 0, 0.9);
+            color: #333;
+            font-size: 1.1rem;
+        }
+        
+        .blocked {
+    background: none !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    position: relative;
+}
+
+/* Создаем псевдоэлемент для случайного изображения камня */
+.blocked::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    /* border-radius: 4px; УБРАТЬ ЭТУ СТРОКУ */
+}
+
+/* Случайные изображения камней через псевдоэлементы */
+.blocked:nth-child(3n)::before {
+    background-image: url('stone1.png');
+}
+
+.blocked:nth-child(3n+1)::before {
+    background-image: url('stone2.png');
+}
+
+.blocked:nth-child(3n+2)::before {
+    background-image: url('stone3.png');
+}
+        
+        /* Стиль для плитки артефакта */
+        .artifact {
+            background: linear-gradient(135deg, #8a2be2 0%, #9370db 25%, #9b30ff 50%, #9370db 75%, #8a2be2 100%);
+            background-size: 200% 200%;
+            animation: artifactGlow 2s ease infinite;
+            color: white;
+            font-size: 1.1rem;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .artifact::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, transparent 30%, rgba(255, 255, 255, 0.2) 100%);
+            z-index: -1;
+            animation: artifactPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes artifactGlow {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+        
+        @keyframes artifactPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .controls-wrapper {
+            display: flex;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 500px;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: auto auto;
+            gap: 12px;
+            width: 180px;
+            margin-left: 20px;
+            justify-items: center;
+        }
+
+        .control-btn {
+            background: rgba(50, 50, 60, 0.9);
+            border: 1px solid rgba(100, 100, 120, 0.3);
+            border-radius: 50%;
+            color: #e0e0e0;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .up {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .down {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        .left {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .right {
+            grid-column: 3;
+            grid-row: 2;
+        }
+        
+        .restart-control {
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .restart-btn-control {
+            background: rgba(255, 100, 100, 0.9);
+            border: 1px solid rgba(255, 150, 150, 0.3);
+            border-radius: 50%;
+            color: white;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            height: 70px;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 4px 12px rgba(255, 100, 100, 0.3);
+        }
+        
+        .restart-btn-control:active {
+            transform: scale(0.92);
+            background: rgba(255, 120, 120, 0.9);
+        }
+        
+        .message, .leaderboard-modal, .profile-modal, .account-transfer-modal, 
+        .account-restore-modal, .artifacts-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(20, 20, 20, 0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .message-content, .leaderboard-content, .profile-content, .account-transfer-content, 
+        .account-restore-content, .artifacts-content {
+            background: rgba(40, 40, 50, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 90%;
+            width: 400px;
+            border: 1px solid rgba(100, 100, 120, 0.3);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .message h2, .leaderboard-content h2, .profile-content h2, .account-transfer-content h2, 
+        .account-restore-content h2, .artifacts-content h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .message p, .account-transfer-content p, .account-restore-content p, .artifacts-content p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: #c0c0c0;
+            line-height: 1.5;
+        }
+        
+        .restart-btn, .profile-btn-save, .account-transfer-btn, .account-restore-btn, .artifacts-close-btn {
+            background: rgba(100, 149, 237, 0.9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .restart-btn:active, .profile-btn-save:active, .account-transfer-btn:active, 
+        .account-restore-btn:active, .artifacts-close-btn:active {
+            transform: scale(0.96);
+            background: rgba(120, 169, 247, 0.9);
+        }
+        
+        .profile-avatar-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(70, 70, 80, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 3px solid rgba(100, 100, 120, 0.3);
+        }
+        
+        .profile-avatar i {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .profile-avatar-upload {
+            background: rgba(60, 60, 70, 0.8);
+            color: white;
+            border: 1px dashed rgba(100, 100, 120, 0.5);
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        
+        .profile-avatar-upload:hover {
+            background: rgba(80, 80, 90, 0.9);
+        }
+        
+        .profile-name-section {
+            margin-bottom: 15px;
+        }
+        
+        .profile-name-section label {
+            display: block;
+            margin-bottom: 8px;
+            color: #c0c0c0;
+            font-size: 0.95rem;
+        }
+        
+        .profile-name-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(30, 30, 40, 0.9);
+            border: 1px solid rgba(100, 100, 120, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        .profile-name-input:focus {
+            border-color: rgba(100, 149, 237, 0.7);
+        }
+        
+        .profile-id-section {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            background: rgba(30, 30, 40, 0.9);
+            border: 1px solid rgba(100, 100, 120, 0.3);
+            border-radius: 8px;
+        }
+        
+        .profile-id-section label {
+            display: block;
+            margin-bottom: 8px;
+            color: #c0c0c0;
+            font-size: 0.95rem;
+        }
+        
+        .profile-id-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .profile-id-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #ffd700;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+        }
+        
+        .profile-id-copy {
+            background: rgba(100, 149, 237, 0.9);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .profile-id-copy:hover {
+            background: rgba(120, 169, 247, 0.9);
+        }
+        
+        .profile-info {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+        
+        .profile-account-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(100, 100, 120, 0.2);
+        }
+        
+        .profile-account-action {
+            color: #4a90e2;
+            background: none;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 8px 12px;
+            transition: all 0.2s;
+            border-radius: 4px;
+        }
+        
+        .profile-account-action:hover {
+            background: rgba(74, 144, 226, 0.1);
+            color: #5ca0f0;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 500px;
+            font-size: 0.75rem;
+            background: rgba(40, 40, 40, 0.6);
+            border-radius: 10px;
+            padding: 10px;
+            border: 1px solid rgba(100, 100, 120, 0.2);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 6px;
+        }
+        
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+        
+        .effects-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            overflow: hidden;
+        }
+        
+        .effect {
+            position: absolute;
+            font-weight: 700;
+            font-size: 1.2rem;
+            pointer-events: none;
+            z-index: 20;
+            animation: floatEffect 1s ease-out forwards;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Эффект для сбора артефакта */
+        .artifact-effect {
+            position: absolute;
+            font-weight: 900;
+            font-size: 2.5rem;
+            pointer-events: none;
+            z-index: 25;
+            animation: magicFloat 1.5s ease-out forwards;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            filter: drop-shadow(0 0 8px rgba(138, 43, 226, 0.8));
+        }
+        
+        @keyframes floatEffect {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -100%) scale(1.2); }
+        }
+        
+        @keyframes magicFloat {
+            0% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(0.5) rotate(0deg); 
+                filter: drop-shadow(0 0 0px rgba(255, 255, 255, 0));
+            }
+            50% { 
+                opacity: 1; 
+                transform: translate(-50%, -120%) scale(1.2) rotate(180deg); 
+                filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+            }
+            100% { 
+                opacity: 0; 
+                transform: translate(-50%, -180%) scale(1.5) rotate(360deg); 
+                filter: drop-shadow(0 0 0px rgba(255, 255, 255, 0));
+            }
+        }
+        
+        @media (max-height: 700px) {
+            h1 {
+                font-size: 1.6rem;
+            }
+            
+            .stats {
+                font-size: 0.9rem;
+                padding: 10px 14px;
+                margin-bottom: 12px;
+            }
+            
+            .game-container {
+                margin-bottom: 15px;
+                height: 400px;
+            }
+            
+            .legend {
+                display: none;
+            }
+            
+            .controls {
+                width: 160px;
+                gap: 10px;
+            }
+            
+            .control-btn {
+                width: 52px;
+                height: 52px;
+                font-size: 1.4rem;
+            }
+            
+            .restart-btn-control {
+                width: 65px;
+                height: 65px;
+                font-size: 1.5rem;
+            }
+            
+            .profile-btn, .leaderboard-btn, .sound-toggle, .artifacts-btn {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .profile-btn i, .leaderboard-btn i, .sound-toggle i, .artifacts-btn i {
+                font-size: 1.1rem;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .tile {
+                font-size: 0.8rem;
+            }
+            
+            .controls {
+                width: 150px;
+                gap: 8px;
+                margin-left: 15px;
+            }
+            
+            .control-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 1.3rem;
+            }
+            
+            .restart-btn-control {
+                width: 60px;
+                height: 60px;
+                font-size: 1.4rem;
+                margin-right: 15px;
+            }
+            
+            .stats {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .game-container {
+                height: 350px;
+            }
+            
+            .profile-content, .leaderboard-content, .account-transfer-content, 
+            .account-restore-content, .artifacts-content {
+                width: 95%;
+                padding: 20px 15px;
+            }
+        }
+        
+        @media (max-height: 600px) {
+            .header, .legend {
+                display: none;
+            }
+            
+            body {
+                padding: 10px;
+                justify-content: center;
+            }
+            
+            .game-container {
+                margin-bottom: 10px;
+                height: 320px;
+            }
+            
+            .stats {
+                margin-bottom: 10px;
+                padding: 10px 12px;
+            }
+            
+            .controls-wrapper {
+                margin-top: 10px;
+            }
+            
+            .sound-toggle {
+                top: 10px;
+                right: 10px;
+            }
+            
+            .profile-btn {
+                top: 10px;
+                right: 60px;
+            }
+            
+            .artifacts-btn {
+                top: 10px;
+                right: 110px;
+            }
+            
+            .leaderboard-btn {
+                top: 10px;
+                right: 160px;
+            }
+        }
+        
+        /* Стили для модального окна информации об артефакте */
+.artifact-info-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(20, 20, 20, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+    text-align: center;
+}
+
+.artifact-info-content {
+    background: rgba(40, 40, 50, 0.95);
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 90%;
+    width: 400px;
+    border: 1px solid rgba(100, 100, 120, 0.3);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    animation: slideUp 0.3s ease;
+    position: relative;
+}
+
+.artifact-info-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    color: #a0a0a0;
+    font-size: 1.5rem;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.artifact-info-close:hover {
+    color: white;
+}
+
+.artifact-info-close-btn {
+    background: rgba(100, 149, 237, 0.9);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 32px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.artifact-info-close-btn:active {
+    transform: scale(0.96);
+    background: rgba(120, 169, 247, 0.9);
+}
+
+/* Эффект при наведении на артефакт */
+.artifact-tile {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.artifact-tile:hover {
+    transform: scale(1.05);
+}
+
+.artifact-tile.collected:hover {
+    transform: scale(1.05) rotate(5deg);
+}
+
+.artifact-tile.unknown:hover {
+    transform: scale(1.05);
+    background: rgba(100, 100, 120, 0.8);
+}
+
+        .score-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .score-label {
+            font-size: 0.7rem;
+            color: #a0a0a0;
+        }
+        
+        .profile-close, .leaderboard-close, .account-transfer-close, 
+        .account-restore-close, .artifacts-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: #a0a0a0;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .profile-close:hover, .leaderboard-close:hover, .account-transfer-close:hover, 
+        .account-restore-close:hover, .artifacts-close:hover {
+            color: white;
+        }
+        
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(46, 204, 113, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 1000;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: none;
+            animation: fadeInOut 2s ease;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+        
+        .leaderboard-list {
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: rgba(30, 30, 40, 0.8);
+            border-radius: 8px;
+            border: 1px solid rgba(100, 100, 120, 0.2);
+        }
+        
+        .leaderboard-position {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #ffd700;
+            min-width: 30px;
+        }
+        
+        .leaderboard-username {
+            flex-grow: 1;
+            text-align: left;
+            padding: 0 15px;
+            font-weight: 500;
+        }
+        
+        .leaderboard-score {
+            font-weight: bold;
+            color: #a78bfa;
+            font-size: 1.1rem;
+        }
+        
+        .leaderboard-empty {
+            padding: 20px;
+            color: #a0a0a0;
+            font-style: italic;
+        }
+        
+        .leaderboard-loading {
+            padding: 20px;
+            color: #a0a0a0;
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(100, 100, 120, 0.3);
+            border-top: 3px solid #a78bfa;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .account-transfer-token {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(30, 30, 40, 0.9);
+            border-radius: 8px;
+            border: 1px solid rgba(100, 100, 120, 0.3);
+        }
+        
+        .account-transfer-token-label {
+            font-size: 0.9rem;
+            color: #c0c0c0;
+            margin-bottom: 8px;
+        }
+        
+        .account-transfer-token-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #ffd700;
+            letter-spacing: 2px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            word-break: break-all;
+            margin-bottom: 15px;
+        }
+        
+        .account-transfer-token-copy {
+            background: rgba(100, 149, 237, 0.9);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .account-transfer-token-copy:hover {
+            background: rgba(120, 169, 247, 0.9);
+        }
+        
+        .account-restore-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(30, 30, 40, 0.9);
+            border: 1px solid rgba(100, 100, 120, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .account-restore-input:focus {
+            border-color: rgba(100, 149, 237, 0.7);
+        }
+        
+        .account-transfer-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .account-transfer-generate {
+            background: rgba(46, 204, 113, 0.9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .account-transfer-generate:hover {
+            background: rgba(56, 214, 123, 0.9);
+        }
+
+        .account-transfer-back {
+            background: rgba(80, 80, 90, 0.9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .account-transfer-back:hover {
+            background: rgba(100, 100, 110, 0.9);
+        }
+        
+        .account-restore-verify {
+            background: rgba(46, 204, 113, 0.9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        
+        .account-restore-verify:hover {
+            background: rgba(56, 214, 123, 0.9);
+        }
+        
+        .account-transfer-back:hover, .account-restore-back:hover {
+            background: rgba(100, 100, 110, 0.9);
+        }
+        
+        .account-restore-back {
+            background: rgba(80, 80, 90, 0.9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+
+        .account-restore-back:hover {
+            background: rgba(100, 100, 110, 0.9);
+        }
+        
+        .transfer-success {
+            color: #2ecc71;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        
+        .transfer-error {
+            color: #e74c3c;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        
+        .transfer-loading {
+            color: #f39c12;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        
+        /* Стили для окна артефактов */
+        .artifacts-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .artifact-tile {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .artifact-tile.unknown {
+            background: rgba(80, 80, 90, 0.8);
+            color: rgba(255, 255, 255, 0.3);
+            border: 2px dashed rgba(100, 100, 120, 0.5);
+        }
+        
+        .artifact-tile.collected {
+            background: linear-gradient(135deg, #8a2be2 0%, #9370db 50%, #8a2be2 100%);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+            animation: artifactTileGlow 2s ease infinite;
+        }
+        
+        @keyframes artifactTileGlow {
+            0%, 100% { box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4); }
+            50% { box-shadow: 0 4px 25px rgba(138, 43, 226, 0.7); }
+        }
+        
+        .artifact-tile.collected::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+            animation: sparkle 3s linear infinite;
+        }
+        
+        @keyframes sparkle {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .artifacts-info {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(30, 30, 40, 0.8);
+            border-radius: 10px;
+            border: 1px solid rgba(100, 100, 120, 0.3);
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        
+        .artifacts-info h3 {
+            color: #a78bfa;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        .artifacts-info ul {
+            padding-left: 20px;
+            margin-bottom: 0;
+        }
+        
+        .artifacts-info li {
+            margin-bottom: 5px;
+            color: #c0c0c0;
+        }
+        
+        .artifacts-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(30, 30, 40, 0.8);
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .artifacts-collected {
+            color: #a78bfa;
+            font-weight: bold;
+        }
+        
+        .artifacts-total {
+            color: #c0c0c0;
+        }
+        
+        .artifact-progress {
+            width: 100%;
+            height: 6px;
+            background: rgba(80, 80, 90, 0.5);
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .artifact-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #8a2be2, #9370db);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Vihodilka</h1>
+        <p class="subtitle">Достигните цели за 5 ходов</p>
+        <div class="sound-toggle" id="sound-toggle">
+            <i class="fas fa-volume-up"></i>
+            <i class="fas fa-volume-mute"></i>
+        </div>
+        <div class="profile-btn" id="profile-btn">
+            <i class="fas fa-user"></i>
+        </div>
+        <div class="artifacts-btn" id="artifacts-btn">
+            <i class="fas fa-gem"></i>
+        </div>
+        <div class="leaderboard-btn" id="leaderboard-btn">
+            <i class="fas fa-trophy"></i>
+        </div>
+    </div>
+    
+    <div class="stats">
+        <div>
+            <div class="score-label">ХОДЫ</div>
+            <span id="moves" class="moves-count">5</span>
+        </div>
+        <div class="score-container">
+            <div class="score-label">СЕЙЧАС</div>
+            <span id="score" class="score-count">0💎</span>
+        </div>
+        <div class="score-container">
+            <div class="score-label">ВСЕГО</div>
+            <span id="total-score" class="total-score-count">0💎</span>
+        </div>
+    </div>
+    
+    <div class="game-container">
+        <div id="game-board"></div>
+        <div class="effects-container" id="effects"></div>
+    </div>
+    
+    <div class="controls-wrapper">
+        <div class="controls">
+            <div class="control-btn up" id="up"><i class="fas fa-chevron-up"></i></div>
+            <div class="control-btn down" id="down"><i class="fas fa-chevron-down"></i></div>
+            <div class="control-btn left" id="left"><i class="fas fa-chevron-left"></i></div>
+            <div class="control-btn right" id="right"><i class="fas fa-chevron-right"></i></div>
+        </div>
+        
+        <div class="restart-control">
+            <div class="restart-btn-control" id="restart-control">
+                <i class="fas fa-redo-alt"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff6b6b;"></div>
+            <span>Игрок</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(46, 204, 113, 0.9);"></div>
+            <span>Цель ★</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(255, 215, 0, 0.9);"></div>
+            <span>Алмаз 💎</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(100, 149, 237, 0.85);"></div>
+            <span>+ Ходы</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: rgba(255, 140, 0, 0.85);"></div>
+            <span>- Ходы</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #8a2be2, #9370db);"></div>
+            <span>Артефакт ✨</span>
+        </div>
+    </div>
+    
+    <div id="message" class="message">
+        <div class="message-content">
+            <h2 id="message-title">Победа!</h2>
+            <p id="message-text">Вы достигли цели!</p>
+            <button class="restart-btn" id="restart">Играть снова</button>
+        </div>
+    </div>
+    
+    <div id="leaderboard-modal" class="leaderboard-modal">
+        <div class="leaderboard-content">
+            <div class="leaderboard-close" id="leaderboard-close">&times;</div>
+            <h2>Лидерборд</h2>
+            
+            <div class="leaderboard-list" id="leaderboard-list">
+                <div class="leaderboard-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Загрузка лидерборда...</p>
+                </div>
+            </div>
+            
+            <button class="restart-btn" id="leaderboard-refresh">Обновить</button>
+        </div>
+    </div>
+    
+    <div id="profile-modal" class="profile-modal">
+        <div class="profile-content">
+            <div class="profile-close" id="profile-close">&times;</div>
+            <h2>Профиль</h2>
+            
+            <div class="profile-avatar-section">
+                <div class="profile-avatar" id="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <label for="avatar-upload" class="profile-avatar-upload">
+                    <i class="fas fa-upload"></i> Загрузить аватар (до 2 МБ)
+                </label>
+                <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+            </div>
+            
+            <div class="profile-name-section">
+                <label for="username">Имя игрока</label>
+                <input type="text" id="username" class="profile-name-input" maxlength="20">
+                <div class="profile-info">Максимум 20 символов</div>
+            </div>
+            
+            <div class="profile-id-section">
+                <label>Ваш ID игрока</label>
+                <div class="profile-info">Уникальный идентификатор, нельзя изменить</div>
+                <div class="profile-id-display">
+                    <span id="player-id" class="profile-id-value">A0000</span>
+                    <button class="profile-id-copy" id="copy-id">
+                        <i class="fas fa-copy"></i> Копировать
+                    </button>
+                </div>
+            </div>
+            
+            <div class="profile-account-actions">
+                <button class="profile-account-action" id="account-transfer">Новое устройство?</button>
+                <button class="profile-account-action" id="account-restore">Уже есть аккаунт?</button>
+            </div>
+            
+            <button class="profile-btn-save" id="profile-save">Сохранить изменения</button>
+        </div>
+    </div>
+    
+    <div id="account-transfer-modal" class="account-transfer-modal">
+        <div class="account-transfer-content">
+            <div class="account-transfer-close" id="account-transfer-close">&times;</div>
+            <h2>Перенос аккаунта</h2>
+            
+            <p>Вы можете перенести свой прогресс на другое устройство!</p>
+            <p>Сгенерируйте ключ и введите его на новом устройстве в разделе "Уже есть аккаунт?".</p>
+            
+            <div class="account-transfer-token" id="token-section" style="display: none;">
+                <div class="account-transfer-token-label">Ваш ключ переноса:</div>
+                <div id="transfer-token" class="account-transfer-token-value">key-000000</div>
+                <button class="account-transfer-token-copy" id="copy-transfer-token">
+                    <i class="fas fa-copy"></i> Копировать ключ
+                </button>
+            </div>
+            
+            <div id="transfer-message"></div>
+            
+            <div class="account-transfer-buttons">
+                <button class="account-transfer-back" id="account-transfer-back">Назад</button>
+                <button class="account-transfer-generate" id="generate-token">Сгенерировать ключ</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="account-restore-modal" class="account-restore-modal">
+        <div class="account-restore-content">
+            <div class="account-restore-close" id="account-restore-close">&times;</div>
+            <h2>Восстановление аккаунта</h2>
+            
+            <p>Введите ключ переноса, который вы получили на другом устройстве, чтобы восстановить свой прогресс.</p>
+            
+            <input type="text" id="restore-token-input" class="account-restore-input" placeholder="key-xxxxxx">
+            
+            <div id="restore-message"></div>
+            
+            <div class="account-restore-buttons">
+                <button class="account-restore-back" id="account-restore-back">Назад</button>
+                <button class="account-restore-verify" id="verify-token">Восстановить аккаунт</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Новое модальное окно артефактов -->
+    <div id="artifacts-modal" class="artifacts-modal">
+        <div class="artifacts-content">
+            <div class="artifacts-close" id="artifacts-close">&times;</div>
+            <h2>Артефакты</h2>
+            
+            <p>Собирайте магические фрукты на игровом поле и сохраняйте их, достигнув цели!</p>
+            
+            <div class="artifacts-grid" id="artifacts-grid">
+                <!-- Артефакты будут добавлены через JavaScript -->
+            </div>
+            
+            <div class="artifacts-stats">
+                <div class="artifacts-collected" id="artifacts-collected">0/10</div>
+                <div class="artifacts-total">Собрано</div>
+            </div>
+            
+            <div class="artifact-progress">
+                <div class="artifact-progress-bar" id="artifact-progress-bar"></div>
+            </div>
+            
+            <div class="artifacts-info">
+                <h3>Что это?</h3>
+                <ul>
+                    <li>На игровом поле с шансом 20% появляются артефакты</li>
+                    <li>Артефакт сохраняется только если вы достигаете цели ★</li>
+                </ul>
+            </div>
+            
+            <button class="artifacts-close-btn" id="artifacts-close-btn">Закрыть</button>
+        </div>
+    </div>
+    
+    <div class="copy-notification" id="copy-notification">Скопировано в буфер обмена!</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Конфигурация игры
+            const config = {
+                boardSize: 9,
+                moves: 5,
+                minBonus: 1,
+                maxBonus: 3,
+                // Настройки плиток
+                bonusTileCount: { min: 15, max: 20 },
+                penaltyTileCount: { min: 10, max: 15 },
+                diamondTileCount: { min: 8, max: 12 },
+                blockedTileCount: { min: 8, max: 12 },
+                artifactTileCount: { min: 1, max: 1 }, // Всегда 1 артефакт на поле
+                artifactSpawnChance: 0.2, // 20% шанс спавна артефакта
+                tileTypes: {
+                    EMPTY: 'empty',
+                    PLAYER: 'player',
+                    GOAL: 'goal',
+                    ADD_MOVES: 'add-moves',
+                    REMOVE_MOVES: 'remove-moves',
+                    DIAMOND: 'diamond',
+                    BLOCKED: 'blocked',
+                    ARTIFACT: 'artifact' // Новый тип плитки
+                }
+            };
+            
+            // Артефакты
+            const artifacts = [
+                { emoji: '🍋', name: 'Вимон', collected: false },
+                { emoji: '🍓', name: 'Вибника', collected: false },
+                { emoji: '🍍', name: 'Винанас', collected: false },
+                { emoji: '🥝', name: 'Виви', collected: false },
+                { emoji: '🍇', name: 'Виноград', collected: false },
+                { emoji: '🍌', name: 'Винан', collected: false },
+                { emoji: '🍐', name: 'Вируша', collected: false },
+                { emoji: '🫐', name: 'Вирника', collected: false },
+                { emoji: '🥥', name: 'Викос', collected: false },
+                { emoji: '🥜', name: 'Вирахис', collected: false }
+            ];
+            
+            // Конфигурация Telegram ботов
+            const telegramConfig = {
+                // Бот для отправки результатов (ПИШЕТ)
+                scoreBot: {
+                    token: '8593897146:AAEBVtSR8B8aW7FQKhBGkZbO517EXjdVpAk',
+                    chatId: '-1003683868597'
+                },
+                // Бот для чтения лидерборда (ЧИТАЕТ)
+                leaderboardBot: {
+                    token: '8500186506:AAG-YSOQZz6E3f-PDIW62LTZ3HQrz0g31C0',
+                    chatId: '-1003530717515'
+                }
+            };
+            
+            // Состояние игры
+            let gameState = {
+                board: [],
+                playerPos: { x: 0, y: 0 },
+                goalPos: { x: 0, y: 0 },
+                moves: config.moves,
+                currentScore: 0, // Алмазы за текущую игру
+                totalScore: 0,   // Общий счет (не сбрасывается)
+                gameOver: false,
+                collectedArtifact: null, // Артефакт собранный в текущей игре
+                hasArtifactChance: false // Есть ли шанс получить артефакт
+            };
+            
+            // Профиль пользователя
+            let userProfile = {
+                username: '',
+                userId: '',
+                avatar: null,
+                transferToken: null
+            };
+            
+            // Система звуков
+            let audioContext = null;
+            let soundEnabled = true;
+            
+            // Инициализация аудио контекста
+            function initAudioContext() {
+                if (!audioContext) {
+                    try {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        // iOS требует взаимодействия с пользователем для воспроизведения звука
+                        if (audioContext.state === 'suspended') {
+                            const resumeAudio = () => {
+                                audioContext.resume();
+                                document.removeEventListener('click', resumeAudio);
+                                document.removeEventListener('touchstart', resumeAudio);
+                            };
+                            document.addEventListener('click', resumeAudio);
+                            document.addEventListener('touchstart', resumeAudio);
+                        }
+                    } catch (e) {
+                        console.log('Аудио не поддерживается в этом браузере');
+                        soundEnabled = false;
+                        document.getElementById('sound-toggle').style.display = 'none';
+                    }
+                }
+            }
+            
+            // Система звуков
+            function playWallCollisionSound() {
+                if (!soundEnabled || !audioContext) return;
+                
+                const startTime = audioContext.currentTime;
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = "sine";
+                oscillator.frequency.setValueAtTime(150, startTime);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                gainNode.gain.setValueAtTime(0.5, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.15);
+            }
+
+            function playCardPickupSound() {
+                if (!soundEnabled || !audioContext) return;
+                
+                const startTime = audioContext.currentTime;
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = "sawtooth";
+                oscillator.frequency.setValueAtTime(800, startTime);
+                oscillator.frequency.exponentialRampToValueAtTime(600, startTime + 0.1);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                gainNode.gain.setValueAtTime(0.08, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.12);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.12);
+            }
+
+            function playCoinPickupSound() {
+                if (!soundEnabled || !audioContext) return;
+                
+                const startTime = audioContext.currentTime;
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = "triangle";
+                oscillator.frequency.setValueAtTime(1000, startTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1500, startTime + 0.15);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                gainNode.gain.setValueAtTime(0.15, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.2);
+            }
+
+            function playButtonClickSound() {
+                if (!soundEnabled || !audioContext) return;
+                
+                const startTime = audioContext.currentTime;
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = "sine";
+                oscillator.frequency.setValueAtTime(400, startTime);
+                oscillator.frequency.exponentialRampToValueAtTime(350, startTime + 0.05);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                gainNode.gain.setValueAtTime(0.12, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.08);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.08);
+            }
+
+            function playReloadSound() {
+                if (!soundEnabled || !audioContext) return;
+                
+                const startTime = audioContext.currentTime;
+                const frequencies = [150, 300];
+                const durations = [0.15, 0.1];
+                
+                frequencies.forEach((frequency, index) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.type = "sine";
+                    oscillator.frequency.setValueAtTime(frequency, startTime + index * 0.1);
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    gainNode.gain.setValueAtTime(0.1, startTime + index * 0.1);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + index * 0.1 + durations[index]);
+                    
+                    oscillator.start(startTime + index * 0.1);
+                    oscillator.stop(startTime + index * 0.1 + durations[index]);
+                });
+            }
+
+            function playVictorySound() {
+                if (!soundEnabled || !audioContext) return;
+                
+                const startTime = audioContext.currentTime;
+                const frequencies = [250, 400, 550];
+                const durations = [0.18, 0.22, 0.26];
+                const delays = [0, 0.08, 0.16];
+                
+                frequencies.forEach((frequency, index) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.type = "square";
+                    oscillator.frequency.setValueAtTime(frequency, startTime + delays[index]);
+                    
+                    if (audioContext.createOscillator) {
+                        const lfo = audioContext.createOscillator();
+                        const lfoGain = audioContext.createGain();
+                        lfo.frequency.value = 8;
+                        lfoGain.gain.value = frequency * 0.1;
+                        lfo.connect(lfoGain);
+                        lfoGain.connect(oscillator.frequency);
+                        lfo.start(startTime + delays[index]);
+                        lfo.stop(startTime + delays[index] + durations[index]);
+                    }
+                    
+                    if (audioContext.createBiquadFilter) {
+                        const filter = audioContext.createBiquadFilter();
+                        filter.type = "lowpass";
+                        filter.frequency.value = 1500;
+                        filter.Q.value = 0.5;
+                        
+                        oscillator.connect(filter);
+                        filter.connect(gainNode);
+                    } else {
+                        oscillator.connect(gainNode);
+                    }
+                    
+                    gainNode.connect(audioContext.destination);
+                    
+                    const peakTime = startTime + delays[index] + 0.02;
+                    const releaseStart = startTime + delays[index] + durations[index] * 0.3;
+                    
+                    gainNode.gain.setValueAtTime(0.001, startTime + delays[index]);
+                    gainNode.gain.linearRampToValueAtTime(0.16, peakTime);
+                    gainNode.gain.exponentialRampToValueAtTime(
+                        0.001,
+                        startTime + delays[index] + durations[index]
+                    );
+                    
+                    oscillator.start(startTime + delays[index]);
+                    oscillator.stop(startTime + delays[index] + durations[index]);
+                });
+                
+                setTimeout(() => {
+                    if (!soundEnabled || !audioContext) return;
+                    
+                    const finalStartTime = audioContext.currentTime;
+                    
+                    const osc1 = audioContext.createOscillator();
+                    const osc2 = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    osc1.type = "sawtooth";
+                    osc2.type = "square";
+                    osc1.frequency.setValueAtTime(300, finalStartTime);
+                    osc2.frequency.setValueAtTime(600, finalStartTime);
+                    osc1.frequency.exponentialRampToValueAtTime(150, finalStartTime + 0.2);
+                    osc2.frequency.exponentialRampToValueAtTime(300, finalStartTime + 0.2);
+                    
+                    const merger = audioContext.createChannelMerger(2);
+                    osc1.connect(merger, 0, 0);
+                    osc2.connect(merger, 0, 1);
+                    merger.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    gainNode.gain.setValueAtTime(0.001, finalStartTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.12, finalStartTime + 0.03);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, finalStartTime + 0.25);
+                    
+                    osc1.start(finalStartTime);
+                    osc2.start(finalStartTime);
+                    osc1.stop(finalStartTime + 0.25);
+                    osc2.stop(finalStartTime + 0.25);
+                    
+                }, 200);
+            }
+            
+            // Звук сбора артефакта
+            function playArtifactSound() {
+                if (!soundEnabled || !audioContext) return;
+                
+                const startTime = audioContext.currentTime;
+                
+                // Создаем основной тон
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = "sine";
+                oscillator.frequency.setValueAtTime(800, startTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1200, startTime + 0.3);
+                oscillator.frequency.exponentialRampToValueAtTime(600, startTime + 0.6);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Плавное нарастание и затухание
+                gainNode.gain.setValueAtTime(0.001, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.15, startTime + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.15, startTime + 0.5);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.8);
+                
+                // Добавляем шум для магического эффекта
+                setTimeout(() => {
+                    if (!soundEnabled || !audioContext) return;
+                    
+                    const noiseStartTime = audioContext.currentTime;
+                    const bufferSize = audioContext.sampleRate * 0.5;
+                    const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                    const output = buffer.getChannelData(0);
+                    
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = Math.random() * 2 - 1;
+                    }
+                    
+                    const whiteNoise = audioContext.createBufferSource();
+                    whiteNoise.buffer = buffer;
+                    
+                    const noiseGain = audioContext.createGain();
+                    const filter = audioContext.createBiquadFilter();
+                    
+                    filter.type = "bandpass";
+                    filter.frequency.value = 800;
+                    filter.Q.value = 0.5;
+                    
+                    whiteNoise.connect(filter);
+                    filter.connect(noiseGain);
+                    noiseGain.connect(audioContext.destination);
+                    
+                    noiseGain.gain.setValueAtTime(0.02, noiseStartTime);
+                    noiseGain.gain.exponentialRampToValueAtTime(0.001, noiseStartTime + 0.5);
+                    
+                    whiteNoise.start(noiseStartTime);
+                    whiteNoise.stop(noiseStartTime + 0.5);
+                }, 100);
+            }
+            
+            // Переключение звука
+            function toggleSound() {
+                soundEnabled = !soundEnabled;
+                const soundToggle = document.getElementById('sound-toggle');
+                
+                if (soundEnabled) {
+                    soundToggle.classList.remove('muted');
+                    initAudioContext();
+                } else {
+                    soundToggle.classList.add('muted');
+                }
+                
+                localStorage.setItem('gameSoundEnabled', soundEnabled ? 'true' : 'false');
+            }
+            
+            // Генерация уникального ID игрока
+            function generatePlayerId() {
+                const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                const numbers = '0123456789';
+                
+                const randomLetter = letters.charAt(Math.floor(Math.random() * letters.length));
+                
+                let randomNumbers = '';
+                for (let i = 0; i < 4; i++) {
+                    randomNumbers += numbers.charAt(Math.floor(Math.random() * numbers.length));
+                }
+                
+                return randomLetter + randomNumbers;
+            }
+            
+            // Генерация ключа переноса
+            function generateTransferToken() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let token = 'key-';
+                for (let i = 0; i < 6; i++) {
+                    token += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return token;
+            }
+            
+            // отправка результата в telegram
+async function sendScoreToTelegram() {
+    try {
+        const scoreData = {
+            id: userProfile.userId,
+            name: userProfile.username,
+            score: gameState.totalScore,
+            artifacts: artifacts.map(artifact => artifact.collected) // Добавляем артефакты
+        };
+        
+        const message = JSON.stringify(scoreData);
+        
+        const url = `https://api.telegram.org/bot${telegramConfig.scoreBot.token}/sendMessage`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: telegramConfig.scoreBot.chatId,
+                text: message,
+                parse_mode: 'HTML'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.ok) {
+            console.error('Ошибка отправки в Telegram:', data);
+        } else {
+            console.log('Результат отправлен в Telegram');
+        }
+    } catch (error) {
+        console.error('Ошибка при отправке в Telegram:', error);
+    }
+}
+            
+            // отправка данных о ключе переноса
+async function sendTransferTokenToTelegram(token, active = false) {
+    try {
+        // Собираем данные об артефактах в виде массива true/false
+        const artifactsStatus = artifacts.map(artifact => artifact.collected);
+        
+        const transferData = {
+            id: userProfile.userId,
+            name: userProfile.username,
+            score: gameState.totalScore,
+            artifacts: artifactsStatus, // Просто массив [true, false, true...]
+            token: token,
+            active: active
+        };
+        
+        const message = JSON.stringify(transferData);
+        
+        const url = `https://api.telegram.org/bot${telegramConfig.scoreBot.token}/sendMessage`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: telegramConfig.scoreBot.chatId,
+                text: message,
+                parse_mode: 'HTML'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.ok) {
+            console.error('Ошибка отправки ключа в Telegram:', data);
+            return false;
+        } else {
+            console.log('Ключ отправлен в Telegram');
+            return true;
+        }
+    } catch (error) {
+        console.error('Ошибка при отправке ключа в Telegram:', error);
+        return false;
+    }
+}
+            
+            // получение лидерборда из telegram
+            async function getLeaderboard() {
+                try {
+                    const url = `https://api.telegram.org/bot${telegramConfig.leaderboardBot.token}/getUpdates`;
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            offset: 0,
+                            limit: 100,
+                            timeout: 0
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!data.ok) {
+                        console.error('Ошибка получения лидерборда:', data);
+                        return [];
+                    }
+                    
+                    const updates = data.result || [];
+                    const leaderboardMap = new Map();
+                    
+                    for (const update of updates) {
+                        try {
+                            if (update.message && update.message.text) {
+                                const text = update.message.text;
+                                
+                                if (text.startsWith('{') && text.endsWith('}')) {
+                                    try {
+                                        const scoreData = JSON.parse(text);
+                                        
+                                        if (scoreData.id && scoreData.name && typeof scoreData.score === 'number') {
+                                            if (!leaderboardMap.has(scoreData.id) || 
+                                                leaderboardMap.get(scoreData.id).score < scoreData.score) {
+                                                leaderboardMap.set(scoreData.id, scoreData);
+                                            }
+                                        }
+                                    } catch (parseError) {
+                                        continue;
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            continue;
+                        }
+                    }
+                    
+                    const leaderboard = Array.from(leaderboardMap.values())
+                        .sort((a, b) => b.score - a.score)
+                        .slice(0, 10);
+                    
+                    return leaderboard;
+                } catch (error) {
+                    console.error('Ошибка при получении лидерборда:', error);
+                    return [];
+                }
+            }
+            
+            // поиск ключа переноса в telegram
+            async function findTransferTokenInTelegram(token) {
+                try {
+                    const url = `https://api.telegram.org/bot${telegramConfig.leaderboardBot.token}/getUpdates`;
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            offset: 0,
+                            limit: 200,
+                            timeout: 0
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!data.ok) {
+                        console.error('Ошибка получения данных из Telegram:', data);
+                        return null;
+                    }
+                    
+                    const updates = data.result || [];
+                    
+                    for (const update of updates) {
+                        try {
+                            if (update.message && update.message.text) {
+                                const text = update.message.text;
+                                
+                                if (text.startsWith('{') && text.endsWith('}')) {
+                                    try {
+                                        const transferData = JSON.parse(text);
+                                        
+                                        if (transferData.token && transferData.token === token && 
+                                            transferData.active !== undefined) {
+                                            return transferData;
+                                        }
+                                    } catch (parseError) {
+                                        continue;
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            continue;
+                        }
+                    }
+                    
+                    return null;
+                } catch (error) {
+                    console.error('Ошибка при поиске ключа в Telegram:', error);
+                    return null;
+                }
+            }
+            
+            // Загружаем данные из localStorage
+            function loadProfile() {
+                // Загружаем или генерируем ID игрока
+                let savedUserId = localStorage.getItem('gameUserId');
+                if (!savedUserId) {
+                    savedUserId = generatePlayerId();
+                    localStorage.setItem('gameUserId', savedUserId);
+                }
+                userProfile.userId = savedUserId;
+                
+                // Загружаем имя игрока
+                const savedUsername = localStorage.getItem('gameUsername');
+                
+                if (!savedUsername) {
+                    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    const numbers = '0123456789';
+                    let randomName = '';
+                    
+                    for (let i = 0; i < 6; i++) {
+                        randomName += letters.charAt(Math.floor(Math.random() * letters.length));
+                    }
+                    
+                    for (let i = 0; i < 2; i++) {
+                        randomName += numbers.charAt(Math.floor(Math.random() * numbers.length));
+                    }
+                    
+                    userProfile.username = randomName;
+                } else {
+                    userProfile.username = savedUsername;
+                }
+                
+                // Загружаем аватар если есть
+                const savedAvatar = localStorage.getItem('gameAvatar');
+                if (savedAvatar) {
+                    userProfile.avatar = savedAvatar;
+                }
+                
+                // Загружаем настройку звука
+                const savedSoundEnabled = localStorage.getItem('gameSoundEnabled');
+                if (savedSoundEnabled !== null) {
+                    soundEnabled = savedSoundEnabled === 'true';
+                }
+                
+                // Загружаем общий счет
+                const savedTotalScore = localStorage.getItem('diamondTotalScore');
+                if (savedTotalScore) {
+                    gameState.totalScore = parseInt(savedTotalScore, 10);
+                }
+                
+                // Загружаем артефакты
+                loadArtifacts();
+                
+                // Обновляем интерфейс профиля
+                updateProfileUI();
+                updateGameStats();
+                updateArtifactsUI();
+            }
+            
+            // Загружаем артефакты из localStorage
+            function loadArtifacts() {
+                const savedArtifacts = localStorage.getItem('gameArtifacts');
+                if (savedArtifacts) {
+                    try {
+                        const parsedArtifacts = JSON.parse(savedArtifacts);
+                        parsedArtifacts.forEach((artifact, index) => {
+                            if (artifacts[index]) {
+                                artifacts[index].collected = artifact.collected;
+                            }
+                        });
+                    } catch (e) {
+                        console.log('Ошибка загрузки артефактов');
+                    }
+                }
+            }
+            
+            // Сохраняем артефакты в localStorage
+            function saveArtifacts() {
+                const artifactsToSave = artifacts.map(artifact => ({
+                    emoji: artifact.emoji,
+                    name: artifact.name,
+                    collected: artifact.collected
+                }));
+                localStorage.setItem('gameArtifacts', JSON.stringify(artifactsToSave));
+            }
+            
+            // Обновление UI профиля
+            function updateProfileUI() {
+                const usernameInput = document.getElementById('username');
+                const playerIdElement = document.getElementById('player-id');
+                const avatarElement = document.getElementById('profile-avatar');
+                const soundToggle = document.getElementById('sound-toggle');
+                
+                usernameInput.value = userProfile.username;
+                playerIdElement.textContent = userProfile.userId;
+                
+                avatarElement.innerHTML = '';
+                if (userProfile.avatar) {
+                    const img = document.createElement('img');
+                    img.src = userProfile.avatar;
+                    img.alt = 'Аватар';
+                    avatarElement.appendChild(img);
+                } else {
+                    const icon = document.createElement('i');
+                    icon.className = 'fas fa-user';
+                    avatarElement.appendChild(icon);
+                }
+                
+                if (soundEnabled) {
+                    soundToggle.classList.remove('muted');
+                } else {
+                    soundToggle.classList.add('muted');
+                }
+            }
+            
+            // Обновление статистики игры
+            function updateGameStats() {
+                const totalScoreElement = document.getElementById('total-score');
+                totalScoreElement.textContent = `${gameState.totalScore}💎`;
+            }
+            
+            function updateArtifactsUI() {
+    const artifactsGrid = document.getElementById('artifacts-grid');
+    const artifactsCollectedElement = document.getElementById('artifacts-collected');
+    const artifactProgressBar = document.getElementById('artifact-progress-bar');
+    
+    // Очищаем сетку
+    artifactsGrid.innerHTML = '';
+    
+    // Считаем собранные артефакты
+    let collectedCount = 0;
+    
+    // Создаем плитки артефактов
+    artifacts.forEach((artifact, index) => {
+        const artifactTile = document.createElement('div');
+        artifactTile.className = `artifact-tile ${artifact.collected ? 'collected' : 'unknown'}`;
+        artifactTile.innerHTML = artifact.collected ? artifact.emoji : '?';
+        artifactTile.title = artifact.collected ? artifact.name : 'Неизвестный артефакт';
+        
+        artifactsGrid.appendChild(artifactTile);
+        
+        if (artifact.collected) {
+            collectedCount++;
+        }
+    });
+    
+    // Обновляем статистику
+    artifactsCollectedElement.textContent = `${collectedCount}/10`;
+    
+    // Обновляем прогресс бар
+    const progressPercentage = (collectedCount / artifacts.length) * 100;
+    artifactProgressBar.style.width = `${progressPercentage}%`;
+    
+    // Добавляем обработчики кликов на артефакты
+    addArtifactClickHandlers();
+}
+            
+            // Функция для добавления обработчиков клика на артефакты
+function addArtifactClickHandlers() {
+    const artifactTiles = document.querySelectorAll('.artifact-tile');
+    
+    artifactTiles.forEach((tile, index) => {
+        tile.addEventListener('click', () => {
+            if (artifacts[index].collected) {
+                showArtifactInfo(index);
+            } else {
+                playButtonClickSound();
+                showArtifactHint();
+            }
+        });
+    });
+}
+
+// Функция для показа информации об артефакте
+function showArtifactInfo(artifactIndex) {
+    const artifact = artifacts[artifactIndex];
+    
+    // Создаем модальное окно
+    const infoModal = document.createElement('div');
+    infoModal.className = 'artifact-info-modal';
+    
+    infoModal.innerHTML = `
+        <div class="artifact-info-content">
+            <div class="artifact-info-close">&times;</div>
+            
+            <div style="font-size: 4rem; margin-bottom: 15px; animation: artifactTileGlow 2s ease infinite;">
+                ${artifact.emoji}
+            </div>
+            
+            <h2 style="font-size: 1.8rem; margin-bottom: 10px; color: #a78bfa;">
+                ${artifact.name}
+            </h2>
+            
+            <div style="
+                background: rgba(30, 30, 40, 0.8);
+                border-radius: 10px;
+                padding: 15px;
+                margin: 15px 0;
+                text-align: left;
+                font-size: 0.95rem;
+            ">
+                <h3 style="color: #a78bfa; margin-bottom: 8px; font-size: 1rem;">Описание:</h3>
+                <p style="color: #c0c0c0; line-height: 1.5;">
+                    Вы собрали этот редкий магический фрукт на игровом поле!
+                </p>
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                    <div>
+                        <div style="color: #a78bfa; font-size: 0.9rem;">№ в коллекции</div>
+                        <div style="color: white; font-size: 1.2rem; font-weight: bold;">${artifactIndex + 1}/10</div>
+                    </div>
+                    <div>
+                        <div style="color: #a78bfa; font-size: 0.9rem;">Статус</div>
+                        <div style="color: #2ecc71; font-size: 1.1rem; font-weight: bold;">
+                            ✓ Собран
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="artifact-info-close-btn">
+                Закрыть
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(infoModal);
+    
+    // Обработчики закрытия
+    const closeBtn = infoModal.querySelector('.artifact-info-close');
+    const closeBtnBottom = infoModal.querySelector('.artifact-info-close-btn');
+    
+    closeBtn.addEventListener('click', () => {
+        playButtonClickSound();
+        document.body.removeChild(infoModal);
+    });
+    
+    closeBtnBottom.addEventListener('click', () => {
+        playButtonClickSound();
+        document.body.removeChild(infoModal);
+    });
+    
+    infoModal.addEventListener('click', (e) => {
+        if (e.target === infoModal) {
+            playButtonClickSound();
+            document.body.removeChild(infoModal);
+        }
+    });
+    
+    playButtonClickSound();
+}
+
+// Функция для показа подсказки о несобранных артефактах
+function showArtifactHint() {
+    const infoModal = document.createElement('div');
+    infoModal.className = 'artifact-info-modal';
+    
+    infoModal.innerHTML = `
+        <div class="artifact-info-content">
+            <div class="artifact-info-close">&times;</div>
+            
+            <div style="font-size: 3rem; margin-bottom: 15px; color: #a0a0a0;">
+                ?
+            </div>
+            
+            <h2 style="font-size: 1.8rem; margin-bottom: 10px; color: #a0a0a0;">
+                Неизвестный артефакт
+            </h2>
+            
+            <div style="
+                background: rgba(30, 30, 40, 0.8);
+                border-radius: 10px;
+                padding: 15px;
+                margin: 15px 0;
+                text-align: center;
+                font-size: 0.95rem;
+            ">
+                <p style="color: #c0c0c0; line-height: 1.5;">
+                    Этот артефакт ещё не найден!<br><br>
+                    Ищите магические фрукты на игровом поле и собирайте их, достигнув цели ★
+                </p>
+                
+                <div style="margin-top: 15px; padding: 10px; background: rgba(138, 43, 226, 0.2); border-radius: 8px;">
+                    <div style="color: #a78bfa; font-weight: bold;">Совет:</div>
+                    <div style="color: #c0c0c0; font-size: 0.9rem; margin-top: 5px;">
+                        Артефакты появляются случайным образом с шансом 20%
+                    </div>
+                </div>
+            </div>
+            
+            <button class="artifact-info-close-btn">
+                Понятно
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(infoModal);
+    
+    // Обработчики закрытия
+    const closeBtn = infoModal.querySelector('.artifact-info-close');
+    const closeBtnBottom = infoModal.querySelector('.artifact-info-close-btn');
+    
+    closeBtn.addEventListener('click', () => {
+        playButtonClickSound();
+        document.body.removeChild(infoModal);
+    });
+    
+    closeBtnBottom.addEventListener('click', () => {
+        playButtonClickSound();
+        document.body.removeChild(infoModal);
+    });
+    
+    infoModal.addEventListener('click', (e) => {
+        if (e.target === infoModal) {
+            playButtonClickSound();
+            document.body.removeChild(infoModal);
+        }
+    });
+}
+            
+            // Показать окно артефактов
+            function showArtifactsModal() {
+                playButtonClickSound();
+                updateArtifactsUI();
+                document.getElementById('artifacts-modal').style.display = 'flex';
+            }
+            
+            // Скрыть окно артефактов
+            function hideArtifactsModal() {
+                playButtonClickSound();
+                document.getElementById('artifacts-modal').style.display = 'none';
+            }
+            
+            // Сохранение профиля
+            function saveProfile() {
+                playButtonClickSound();
+                
+                const usernameInput = document.getElementById('username');
+                const newUsername = usernameInput.value.trim();
+                
+                if (newUsername && newUsername.length <= 20) {
+                    userProfile.username = newUsername;
+                    localStorage.setItem('gameUsername', newUsername);
+                    
+                    if (userProfile.avatar) {
+                        localStorage.setItem('gameAvatar', userProfile.avatar);
+                    }
+                    
+                    hideProfileModal();
+                } else {
+                    alert('Имя должно содержать от 1 до 20 символов');
+                }
+            }
+            
+            // Копирование ID в буфер обмена
+            function copyPlayerId() {
+                playButtonClickSound();
+                
+                const playerId = userProfile.userId;
+                
+                navigator.clipboard.writeText(playerId).then(() => {
+                    showCopyNotification('ID скопирован в буфер обмена!');
+                }).catch(err => {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = playerId;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    
+                    try {
+                        document.execCommand('copy');
+                        showCopyNotification('ID скопирован в буфер обмена!');
+                    } catch (err) {
+                        alert('Не удалось скопировать ID. Скопируйте вручную: ' + playerId);
+                    }
+                    
+                    document.body.removeChild(textArea);
+                });
+            }
+            
+            // Показать уведомление о копировании
+            function showCopyNotification(message) {
+                const notification = document.getElementById('copy-notification');
+                notification.textContent = message;
+                notification.style.display = 'block';
+                
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 2000);
+            }
+            
+            // Загрузка аватарки
+            function handleAvatarUpload(event) {
+                playButtonClickSound();
+                
+                const file = event.target.files[0];
+                
+                if (!file) return;
+                
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Файл слишком большой! Максимальный размер: 2 МБ');
+                    return;
+                }
+                
+                if (!file.type.match('image.*')) {
+                    alert('Пожалуйста, выберите изображение');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    userProfile.avatar = e.target.result;
+                    updateProfileUI();
+                };
+                
+                reader.readAsDataURL(file);
+            }
+            
+            // Генерация ключа переноса
+            async function generateTransferTokenHandler() {
+                playButtonClickSound();
+                
+                const tokenSection = document.getElementById('token-section');
+                const transferMessage = document.getElementById('transfer-message');
+                
+                transferMessage.innerHTML = '<div class="transfer-loading">ㅤ</div>';
+                
+                const token = generateTransferToken();
+                userProfile.transferToken = token;
+                
+                // Показываем ключ
+                document.getElementById('transfer-token').textContent = token;
+                tokenSection.style.display = 'block';
+                
+                // Отправляем ключ в Telegram
+                const success = await sendTransferTokenToTelegram(token, false);
+                
+                if (success) {
+                    transferMessage.innerHTML = '<div class="transfer-success">ㅤ</div>';
+                } else {
+                    transferMessage.innerHTML = '<div class="transfer-error">Ошибка сохранения ключа. Проверьте подключение к интернету.</div>';
+                }
+            }
+            
+            // Проверка и применение ключа
+async function verifyTransferTokenHandler() {
+    playButtonClickSound();
+    
+    const tokenInput = document.getElementById('restore-token-input');
+    const token = tokenInput.value.trim();
+    const restoreMessage = document.getElementById('restore-message');
+    
+    if (!token || !token.startsWith('key-') || token.length !== 10) {
+        restoreMessage.innerHTML = '<div class="transfer-error">Неверный формат ключа. Ключ должен быть в формате: key-xxxxxx</div>';
+        return;
+    }
+    
+    restoreMessage.innerHTML = '<div class="transfer-loading">Проверка ключа...</div>';
+    
+    // Ищем ключ в Telegram
+    const transferData = await findTransferTokenInTelegram(token);
+    
+    if (!transferData) {
+        restoreMessage.innerHTML = '<div class="transfer-error">Ключ не найден. Проверьте правильность ввода.</div>';
+        return;
+    }
+    
+    if (transferData.active === true) {
+        restoreMessage.innerHTML = '<div class="transfer-error">Этот ключ уже был использован для переноса аккаунта.</div>';
+        return;
+    }
+    
+    // Переносим данные
+    userProfile.userId = transferData.id;
+    userProfile.username = transferData.name;
+    gameState.totalScore = transferData.score;
+    
+    // Восстанавливаем артефакты если они есть в данных
+    if (transferData.artifacts && Array.isArray(transferData.artifacts)) {
+        transferData.artifacts.forEach((collected, index) => {
+            if (index < artifacts.length) {
+                artifacts[index].collected = collected;
+            }
+        });
+        saveArtifacts();
+    }
+    
+    // Сохраняем в localStorage
+    localStorage.setItem('gameUserId', userProfile.userId);
+    localStorage.setItem('gameUsername', userProfile.username);
+    localStorage.setItem('diamondTotalScore', gameState.totalScore.toString());
+    
+    // Обновляем интерфейс
+    updateProfileUI();
+    updateGameStats();
+    updateArtifactsUI();
+    
+    // Помечаем ключ как использованный
+    await sendTransferTokenToTelegram(token, true);
+    
+    restoreMessage.innerHTML = '<div class="transfer-success">Аккаунт успешно восстановлен! Ваш прогресс перенесен.</div>';
+    
+    // Автоматически закрываем окно через 3 секунды
+    setTimeout(() => {
+        hideAccountRestoreModal();
+        hideProfileModal();
+    }, 3000);
+}
+            
+            // Показать/скрыть модальные окна
+            function showProfileModal() {
+                playButtonClickSound();
+                document.getElementById('profile-modal').style.display = 'flex';
+            }
+            
+            function hideProfileModal() {
+                playButtonClickSound();
+                document.getElementById('profile-modal').style.display = 'none';
+            }
+            
+            function showAccountTransferModal() {
+                playButtonClickSound();
+                document.getElementById('account-transfer-modal').style.display = 'flex';
+                document.getElementById('transfer-message').innerHTML = '';
+                document.getElementById('token-section').style.display = 'none';
+            }
+            
+            function hideAccountTransferModal() {
+                playButtonClickSound();
+                document.getElementById('account-transfer-modal').style.display = 'none';
+            }
+            
+            function showAccountRestoreModal() {
+                playButtonClickSound();
+                document.getElementById('account-restore-modal').style.display = 'flex';
+                document.getElementById('restore-message').innerHTML = '';
+                document.getElementById('restore-token-input').value = '';
+            }
+            
+            function hideAccountRestoreModal() {
+                playButtonClickSound();
+                document.getElementById('account-restore-modal').style.display = 'none';
+            }
+            
+            function hideLeaderboardModal() {
+                playButtonClickSound();
+                document.getElementById('leaderboard-modal').style.display = 'none';
+            }
+            
+            // Копирование ключа переноса
+            function copyTransferToken() {
+                playButtonClickSound();
+                
+                const token = document.getElementById('transfer-token').textContent;
+                
+                navigator.clipboard.writeText(token).then(() => {
+                    showCopyNotification('Ключ скопирован в буфер обмена!');
+                }).catch(err => {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = token;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    
+                    try {
+                        document.execCommand('copy');
+                        showCopyNotification('Ключ скопирован в буфер обмена!');
+                    } catch (err) {
+                        alert('Не удалось скопировать ключ. Скопируйте вручную: ' + token);
+                    }
+                    
+                    document.body.removeChild(textArea);
+                });
+            }
+            
+            // Инициализация профиля
+            loadProfile();
+            
+            // Инициализация аудио
+            initAudioContext();
+            
+            // Элементы DOM
+            const gameBoard = document.getElementById('game-board');
+            const movesElement = document.getElementById('moves');
+            const scoreElement = document.getElementById('score');
+            const totalScoreElement = document.getElementById('total-score');
+            const messageElement = document.getElementById('message');
+            const messageTitle = document.getElementById('message-title');
+            const messageText = document.getElementById('message-text');
+            const restartButton = document.getElementById('restart');
+            const restartControlButton = document.getElementById('restart-control');
+            const effectsContainer = document.getElementById('effects');
+            const profileButton = document.getElementById('profile-btn');
+            const artifactsButton = document.getElementById('artifacts-btn');
+            const leaderboardButton = document.getElementById('leaderboard-btn');
+            const leaderboardCloseButton = document.getElementById('leaderboard-close');
+            const leaderboardRefreshButton = document.getElementById('leaderboard-refresh');
+            const profileModal = document.getElementById('profile-modal');
+            const profileCloseButton = document.getElementById('profile-close');
+            const profileSaveButton = document.getElementById('profile-save');
+            const avatarUploadInput = document.getElementById('avatar-upload');
+            const copyIdButton = document.getElementById('copy-id');
+            const soundToggle = document.getElementById('sound-toggle');
+            const accountTransferButton = document.getElementById('account-transfer');
+            const accountRestoreButton = document.getElementById('account-restore');
+            const accountTransferModal = document.getElementById('account-transfer-modal');
+            const accountTransferCloseButton = document.getElementById('account-transfer-close');
+            const accountTransferBackButton = document.getElementById('account-transfer-back');
+            const generateTokenButton = document.getElementById('generate-token');
+            const copyTransferTokenButton = document.getElementById('copy-transfer-token');
+            const accountRestoreModal = document.getElementById('account-restore-modal');
+            const accountRestoreCloseButton = document.getElementById('account-restore-close');
+            const accountRestoreBackButton = document.getElementById('account-restore-back');
+            const verifyTokenButton = document.getElementById('verify-token');
+            const restoreTokenInput = document.getElementById('restore-token-input');
+            const artifactsModal = document.getElementById('artifacts-modal');
+            const artifactsCloseButton = document.getElementById('artifacts-close');
+            const artifactsCloseBtn = document.getElementById('artifacts-close-btn');
+            
+            // Направления движения
+            const directions = {
+                up: { x: 0, y: -1 },
+                down: { x: 0, y: 1 },
+                left: { x: -1, y: 0 },
+                right: { x: 1, y: 0 }
+            };
+            
+            // Инициализация игры
+            function initGame() {
+                playReloadSound();
+                
+                // Сброс состояния
+                gameState.board = [];
+                gameState.gameOver = false;
+                gameState.moves = config.moves;
+                gameState.currentScore = 0;
+                gameState.collectedArtifact = null;
+                gameState.hasArtifactChance = Math.random() < config.artifactSpawnChance;
+                effectsContainer.innerHTML = '';
+                
+                movesElement.textContent = gameState.moves;
+                scoreElement.textContent = `${gameState.currentScore}💎`;
+                totalScoreElement.textContent = `${gameState.totalScore}💎`;
+                
+                // Создание пустого поля
+                createEmptyBoard();
+                
+                // Размещение игрока в центре
+                gameState.playerPos = {
+                    x: Math.floor(config.boardSize / 2),
+                    y: Math.floor(config.boardSize / 2)
+                };
+                
+                // Размещение цели
+                placeGoal();
+                
+                // Заполнение поля плитками
+                populateBoard();
+                
+                // Отрисовка поля
+                renderBoard();
+                
+                // Скрыть сообщение
+                messageElement.style.display = 'none';
+            }
+            
+            // Сохраняем общий счет
+            function saveTotalScore() {
+                localStorage.setItem('diamondTotalScore', gameState.totalScore.toString());
+                
+                // Отправляем результат в Telegram
+                sendScoreToTelegram().catch(error => {
+                    console.error('Не удалось отправить результат в Telegram:', error);
+                });
+            }
+            
+            // Создание пустого поля
+            function createEmptyBoard() {
+                for (let y = 0; y < config.boardSize; y++) {
+                    gameState.board[y] = [];
+                    for (let x = 0; x < config.boardSize; x++) {
+                        gameState.board[y][x] = { type: config.tileTypes.EMPTY, value: 0 };
+                    }
+                }
+            }
+            
+            // Размещение цели
+            function placeGoal() {
+                let goalX, goalY;
+                
+                do {
+                    goalX = getRandomInt(0, config.boardSize - 1);
+                    goalY = getRandomInt(0, config.boardSize - 1);
+                } while (
+                    Math.abs(goalX - gameState.playerPos.x) < 3 && 
+                    Math.abs(goalY - gameState.playerPos.y) < 3
+                );
+                
+                gameState.goalPos = { x: goalX, y: goalY };
+                gameState.board[goalY][goalX] = { type: config.tileTypes.GOAL, value: 0 };
+            }
+            
+            // Заполнение поля плитками
+            function populateBoard() {
+                gameState.board[gameState.playerPos.y][gameState.playerPos.x] = {
+                    type: config.tileTypes.PLAYER,
+                    value: 0
+                };
+                
+                const bonusCount = getRandomInt(config.bonusTileCount.min, config.bonusTileCount.max);
+                const penaltyCount = getRandomInt(config.penaltyTileCount.min, config.penaltyTileCount.max);
+                const diamondCount = getRandomInt(config.diamondTileCount.min, config.diamondTileCount.max);
+                const blockedCount = getRandomInt(config.blockedTileCount.min, config.blockedTileCount.max);
+                
+                for (let i = 0; i < bonusCount; i++) {
+                    placeRandomTile(config.tileTypes.ADD_MOVES);
+                }
+                
+                for (let i = 0; i < penaltyCount; i++) {
+                    placeRandomTile(config.tileTypes.REMOVE_MOVES);
+                }
+                
+                for (let i = 0; i < diamondCount; i++) {
+                    placeRandomTile(config.tileTypes.DIAMOND);
+                }
+                
+                for (let i = 0; i < blockedCount; i++) {
+                    placeRandomTile(config.tileTypes.BLOCKED);
+                }
+                
+                // Размещаем артефакты если есть шанс
+                if (gameState.hasArtifactChance) {
+                    const artifactCount = getRandomInt(config.artifactTileCount.min, config.artifactTileCount.max);
+                    
+                    // Получаем еще не собранные артефакты
+                    const uncollectedArtifacts = artifacts.filter(a => !a.collected);
+                    
+                    for (let i = 0; i < artifactCount; i++) {
+                        if (uncollectedArtifacts.length > 0) {
+                            // Выбираем случайный несобранный артефакт
+                            const randomArtifactIndex = getRandomInt(0, uncollectedArtifacts.length - 1);
+                            const artifact = uncollectedArtifacts[randomArtifactIndex];
+                            
+                            // Ищем оригинальный индекс артефакта
+                            const originalIndex = artifacts.findIndex(a => a.emoji === artifact.emoji);
+                            
+                            placeRandomTile(config.tileTypes.ARTIFACT, originalIndex);
+                        }
+                    }
+                }
+            }
+            
+            // Размещение плитки в случайном месте
+            function placeRandomTile(tileType, artifactIndex = -1) {
+                let x, y;
+                let attempts = 0;
+                
+                do {
+                    x = getRandomInt(0, config.boardSize - 1);
+                    y = getRandomInt(0, config.boardSize - 1);
+                    attempts++;
+                    
+                    if (attempts > 100) return;
+                } while (
+                    gameState.board[y][x].type !== config.tileTypes.EMPTY ||
+                    (x === gameState.playerPos.x && y === gameState.playerPos.y) ||
+                    (x === gameState.goalPos.x && y === gameState.goalPos.y)
+                );
+                
+                let value = 0;
+                if (tileType === config.tileTypes.ADD_MOVES || tileType === config.tileTypes.REMOVE_MOVES) {
+                    value = getRandomInt(config.minBonus, config.maxBonus);
+                } else if (tileType === config.tileTypes.ARTIFACT) {
+                    value = artifactIndex; // Сохраняем индекс артефакта
+                }
+                
+                gameState.board[y][x] = { type: tileType, value };
+            }
+            
+            // Отрисовка поля
+            function renderBoard() {
+                gameBoard.innerHTML = '';
+                
+                gameBoard.style.gridTemplateColumns = `repeat(${config.boardSize}, 1fr)`;
+                gameBoard.style.gridTemplateRows = `repeat(${config.boardSize}, 1fr)`;
+                
+                for (let y = 0; y < config.boardSize; y++) {
+                    for (let x = 0; x < config.boardSize; x++) {
+                        const tile = document.createElement('div');
+                        const tileData = gameState.board[y][x];
+                        
+                        tile.className = `tile ${tileData.type}`;
+                        
+                        if (tileData.type === config.tileTypes.ADD_MOVES) {
+                            tile.textContent = `+${tileData.value}`;
+                        } else if (tileData.type === config.tileTypes.REMOVE_MOVES) {
+                            tile.textContent = `-${tileData.value}`;
+                        } else if (tileData.type === config.tileTypes.DIAMOND) {
+                            tile.textContent = '💎';
+                        } else if (tileData.type === config.tileTypes.ARTIFACT) {
+                            tile.textContent = artifacts[tileData.value]?.emoji || '✨';
+                        }
+                        
+                        gameBoard.appendChild(tile);
+                    }
+                }
+            }
+            
+            // Движение игрока
+            function movePlayer(direction) {
+                if (gameState.gameOver) return;
+                
+                const newX = gameState.playerPos.x + direction.x;
+                const newY = gameState.playerPos.y + direction.y;
+                
+                if (
+                    newX < 0 || newX >= config.boardSize ||
+                    newY < 0 || newY >= config.boardSize
+                ) {
+                    playWallCollisionSound();
+                    return;
+                }
+                
+                const targetTile = gameState.board[newY][newX];
+                if (targetTile.type === config.tileTypes.BLOCKED) {
+                    playWallCollisionSound();
+                    return;
+                }
+                
+                if (gameState.moves <= 0) {
+                    showMessage('Поражение', 
+                        `У вас закончились ходы!<br>
+                         ${gameState.collectedArtifact ? 'Артефакт потерян!<br>' : ''}
+                         Алмазы этой игры не засчитаны.`);
+                    gameState.gameOver = true;
+                    gameState.collectedArtifact = null;
+                    return;
+                }
+                
+                gameState.moves--;
+                movesElement.textContent = gameState.moves;
+                
+                let effectText = '';
+                let effectColor = '';
+                let isArtifactEffect = false;
+                
+                if (targetTile.type === config.tileTypes.ADD_MOVES) {
+                    gameState.moves += targetTile.value;
+                    movesElement.textContent = gameState.moves;
+                    effectText = `+${targetTile.value}`;
+                    effectColor = '#6495ed';
+                    playCardPickupSound();
+                } else if (targetTile.type === config.tileTypes.REMOVE_MOVES) {
+                    gameState.moves = Math.max(0, gameState.moves - targetTile.value);
+                    movesElement.textContent = gameState.moves;
+                    effectText = `-${targetTile.value}`;
+                    effectColor = '#ff8c00';
+                    playCardPickupSound();
+                } else if (targetTile.type === config.tileTypes.DIAMOND) {
+                    gameState.currentScore++;
+                    scoreElement.textContent = `${gameState.currentScore}💎`;
+                    effectText = '💎';
+                    effectColor = '#ffd700';
+                    playCoinPickupSound();
+                } else if (targetTile.type === config.tileTypes.ARTIFACT) {
+                    // Проверяем, что артефакт еще не собран
+                    const artifactIndex = targetTile.value;
+                    if (artifactIndex >= 0 && artifactIndex < artifacts.length && !artifacts[artifactIndex].collected) {
+                        gameState.collectedArtifact = artifactIndex;
+                        effectText = artifacts[artifactIndex].emoji;
+                        effectColor = '#8a2be2';
+                        isArtifactEffect = true;
+                        playArtifactSound();
+                        
+                        // Показываем специальный эффект для артефакта
+                        showArtifactEffect(newX, newY, effectText);
+                    } else {
+                        playButtonClickSound();
+                    }
+                } else if (targetTile.type === config.tileTypes.GOAL) {
+                    gameState.totalScore += gameState.currentScore;
+                    totalScoreElement.textContent = `${gameState.totalScore}💎`;
+                    
+                    // Проверяем, был ли собран артефакт в этой игре
+                    let artifactMessage = '';
+                    if (gameState.collectedArtifact !== null) {
+                        const artifactIndex = gameState.collectedArtifact;
+                        if (!artifacts[artifactIndex].collected) {
+                            artifacts[artifactIndex].collected = true;
+                            saveArtifacts();
+                            updateArtifactsUI();
+                            artifactMessage = `<br>Вы собрали артефакт: ${artifacts[artifactIndex].emoji} ${artifacts[artifactIndex].name}!`;
+                        }
+                    }
+                    
+                    saveTotalScore();
+                    playVictorySound();
+                    
+                    showMessage('Победа!', 
+                        `Вы достигли цели!<br>
+                         Собрано алмазов: ${gameState.currentScore}💎${artifactMessage}<br>
+                         Общий счёт: ${gameState.totalScore}💎<br>
+                         Осталось ходов: ${gameState.moves}`);
+                    gameState.gameOver = true;
+                    return;
+                } else {
+                    playButtonClickSound();
+                }
+                
+                if (effectText && !isArtifactEffect) {
+                    showTileEffect(newX, newY, effectText, effectColor);
+                }
+                
+                gameState.board[gameState.playerPos.y][gameState.playerPos.x] = {
+                    type: config.tileTypes.EMPTY,
+                    value: 0
+                };
+                
+                gameState.playerPos.x = newX;
+                gameState.playerPos.y = newY;
+                gameState.board[newY][newX] = {
+                    type: config.tileTypes.PLAYER,
+                    value: 0
+                };
+                
+                renderBoard();
+                
+                if (gameState.moves <= 0 && !gameState.gameOver) {
+                    setTimeout(() => {
+                        showMessage('Поражение', 
+                            `У вас закончились ходы!<br>
+                             ${gameState.collectedArtifact !== null ? 'Артефакт потерян!<br>' : ''}
+                             Собрано алмазов: ${gameState.currentScore}💎<br>
+                             Алмазы этой игры не засчитаны.`);
+                        gameState.gameOver = true;
+                        gameState.collectedArtifact = null;
+                    }, 300);
+                }
+            }
+            
+            // Показать эффект при наступлении на плитку
+            function showTileEffect(x, y, text, color) {
+                const effect = document.createElement('div');
+                effect.textContent = text;
+                effect.className = 'effect';
+                effect.style.color = color;
+                effect.style.left = `${(x + 0.5) * (100 / config.boardSize)}%`;
+                effect.style.top = `${(y + 0.5) * (100 / config.boardSize)}%`;
+                
+                effectsContainer.appendChild(effect);
+                
+                setTimeout(() => {
+                    effect.remove();
+                }, 1000);
+            }
+            
+            // Показать специальный эффект для артефакта
+            function showArtifactEffect(x, y, emoji) {
+                const effect = document.createElement('div');
+                effect.textContent = emoji;
+                effect.className = 'artifact-effect';
+                effect.style.left = `${(x + 0.5) * (100 / config.boardSize)}%`;
+                effect.style.top = `${(y + 0.5) * (100 / config.boardSize)}%`;
+                
+                effectsContainer.appendChild(effect);
+                
+                setTimeout(() => {
+                    effect.remove();
+                }, 1500);
+            }
+            
+            // Показать сообщение
+            function showMessage(title, text) {
+                messageTitle.textContent = title;
+                messageText.innerHTML = text;
+                messageElement.style.display = 'flex';
+            }
+            
+            // Генерация случайного целого числа в диапазоне
+            function getRandomInt(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+            
+            // Отображение лидерборда
+            async function showLeaderboard() {
+                playButtonClickSound();
+                
+                const leaderboardList = document.getElementById('leaderboard-list');
+                leaderboardList.innerHTML = '<div class="leaderboard-loading"><div class="loading-spinner"></div><p>Загрузка лидерборда...</p></div>';
+                
+                document.getElementById('leaderboard-modal').style.display = 'flex';
+                
+                try {
+                    const leaderboard = await getLeaderboard();
+                    
+                    if (leaderboard.length === 0) {
+                        leaderboardList.innerHTML = '<div class="leaderboard-empty">Лидерборд пуст. Будьте первым!</div>';
+                        return;
+                    }
+                    
+                    let leaderboardHTML = '';
+                    
+                    leaderboard.forEach((player, index) => {
+                        const position = index + 1;
+                        const medal = position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : position + '.';
+                        
+                        leaderboardHTML += `
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-position">${medal}</div>
+                                <div class="leaderboard-username">${escapeHtml(player.name)}</div>
+                                <div class="leaderboard-score">${player.score}💎</div>
+                            </div>
+                        `;
+                    });
+                    
+                    leaderboardList.innerHTML = leaderboardHTML;
+                } catch (error) {
+                    leaderboardList.innerHTML = '<div class="leaderboard-empty">Ошибка загрузки лидерборда</div>';
+                }
+            }
+            
+            // Экранирование HTML для безопасности
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            // Обработчики событий для кнопок управления
+            document.getElementById('up').addEventListener('click', () => movePlayer(directions.up));
+            document.getElementById('down').addEventListener('click', () => movePlayer(directions.down));
+            document.getElementById('left').addEventListener('click', () => movePlayer(directions.left));
+            document.getElementById('right').addEventListener('click', () => movePlayer(directions.right));
+            
+            // Обработчики для кнопок рестарта
+            restartButton.addEventListener('click', initGame);
+            restartControlButton.addEventListener('click', initGame);
+            
+            // Обработчики для профиля, артефактов и лидерборда
+            profileButton.addEventListener('click', showProfileModal);
+            artifactsButton.addEventListener('click', showArtifactsModal);
+            leaderboardButton.addEventListener('click', showLeaderboard);
+            leaderboardCloseButton.addEventListener('click', hideLeaderboardModal);
+            leaderboardRefreshButton.addEventListener('click', showLeaderboard);
+            profileCloseButton.addEventListener('click', hideProfileModal);
+            profileSaveButton.addEventListener('click', saveProfile);
+            copyIdButton.addEventListener('click', copyPlayerId);
+            avatarUploadInput.addEventListener('change', handleAvatarUpload);
+            soundToggle.addEventListener('click', toggleSound);
+            artifactsCloseButton.addEventListener('click', hideArtifactsModal);
+            artifactsCloseBtn.addEventListener('click', hideArtifactsModal);
+            
+            // Обработчики для системы переноса аккаунта
+            accountTransferButton.addEventListener('click', showAccountTransferModal);
+            accountRestoreButton.addEventListener('click', showAccountRestoreModal);
+            accountTransferCloseButton.addEventListener('click', hideAccountTransferModal);
+            accountTransferBackButton.addEventListener('click', hideAccountTransferModal);
+            generateTokenButton.addEventListener('click', generateTransferTokenHandler);
+            copyTransferTokenButton.addEventListener('click', copyTransferToken);
+            accountRestoreCloseButton.addEventListener('click', hideAccountRestoreModal);
+            accountRestoreBackButton.addEventListener('click', hideAccountRestoreModal);
+            verifyTokenButton.addEventListener('click', verifyTransferTokenHandler);
+            
+            // Обработчик ввода по Enter в поле ключа
+            restoreTokenInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    verifyTransferTokenHandler();
+                }
+            });
+            
+            // Закрытие модальных окон при клике вне их
+            document.getElementById('leaderboard-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideLeaderboardModal();
+                }
+            });
+            
+            document.getElementById('profile-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideProfileModal();
+                }
+            });
+            
+            document.getElementById('account-transfer-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideAccountTransferModal();
+                }
+            });
+            
+            document.getElementById('account-restore-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideAccountRestoreModal();
+                }
+            });
+            
+            document.getElementById('artifacts-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideArtifactsModal();
+                }
+            });
+            
+            // Обработчики для клавиатуры
+            document.addEventListener('keydown', (e) => {
+                if (gameState.gameOver) return;
+                
+                switch(e.key) {
+                    case 'ArrowUp': case 'w': case 'W':
+                        movePlayer(directions.up);
+                        break;
+                    case 'ArrowDown': case 's': case 'S':
+                        movePlayer(directions.down);
+                        break;
+                    case 'ArrowLeft': case 'a': case 'A':
+                        movePlayer(directions.left);
+                        break;
+                    case 'ArrowRight': case 'd': case 'D':
+                        movePlayer(directions.right);
+                        break;
+                    case 'r': case 'R':
+                        initGame();
+                        break;
+                    case 'p': case 'P':
+                        showProfileModal();
+                        break;
+                    case 'a': case 'A':
+                        if (e.ctrlKey) showArtifactsModal();
+                        break;
+                    case 'l': case 'L':
+                        showLeaderboard();
+                        break;
+                    case 'm': case 'M':
+                        toggleSound();
+                        break;
+                }
+            });
+            
+            // Свайпы для мобильных устройств
+            let touchStartX = 0;
+            let touchStartY = 0;
+            
+            gameBoard.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                e.preventDefault();
+            }, { passive: false });
+            
+            gameBoard.addEventListener('touchend', (e) => {
+                if (gameState.gameOver) return;
+                
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                
+                const diffX = touchStartX - touchEndX;
+                const diffY = touchStartY - touchEndY;
+                const minSwipeDistance = 15;
+                
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    if (Math.abs(diffX) > minSwipeDistance) {
+                        if (diffX > 0) {
+                            movePlayer(directions.left);
+                        } else {
+                            movePlayer(directions.right);
+                        }
+                    }
+                } else {
+                    if (Math.abs(diffY) > minSwipeDistance) {
+                        if (diffY > 0) {
+                            movePlayer(directions.up);
+                        } else {
+                            movePlayer(directions.down);
+                        }
+                    }
+                }
+                
+                e.preventDefault();
+            }, { passive: false });
+            
+            // Инициализация игры при загрузке
+            initGame();
+        });
+    </script>
+</body>
+</html>
