@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformers: Choose & Battle</title>
+    <style>
+        /* Общие стили */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 500px;
+            min-height: 80vh;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FFD700;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            font-size: 2.5rem;
+        }
+        
+        h2 {
+            color: #4CAF50;
+            margin: 20px 0;
+            font-size: 1.8rem;
+        }
+        
+        /* Стили для экрана выбора трансформера */
+        .characters {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .character-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            width: 140px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .character-card:hover, .character-card:active {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+            border-color: #4CAF50;
+        }
+        
+        .character-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .character-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        /* Стили для экрана боя */
+        .battle-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        .fighter {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 45%;
+        }
+        
+        .fighter img {
+            width: 100%;
+            max-width: 180px;
+            height: auto;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+        
+        .hp-bar-container {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.2);
+            height: 25px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .hp-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 100%;
+            transition: width 0.5s;
+        }
+        
+        .enemy-hp-bar {
+            background-color: #f44336;
+        }
+        
+        .hp-text {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .player-hp {
+            color: #4CAF50;
+        }
+        
+        .enemy-hp {
+            color: #f44336;
+        }
+        
+        .vs-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #FFD700;
+            font-weight: bold;
+            width: 10%;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 18px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:active {
+            background-color: #3d8b40;
+        }
+        
+        button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+        
+        .restart-btn {
+            background-color: #2196F3;
+        }
+        
+        .restart-btn:active {
+            background-color: #0b7dda;
+        }
+        
+        .result {
+            margin-top: 25px;
+            font-size: 2rem;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .victory {
+            color: #4CAF50;
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        .defeat {
+            color: #f44336;
+            text-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+        }
+        
+        .back-btn {
+            background-color: #9C27B0;
+            margin-top: 15px;
+        }
+        
+        .back-btn:active {
+            background-color: #7B1FA2;
+        }
+        
+        /* Адаптация для мобильных устройств */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .character-card {
+                width: 120px;
+            }
+            
+            .character-card img {
+                height: 120px;
+            }
+            
+            .fighter {
+                width: 48%;
+            }
+            
+            .fighter img {
+                max-width: 140px;
+            }
+            
+            .vs-text {
+                font-size: 1.5rem;
+            }
+            
+            button {
+                font-size: 1.2rem;
+                padding: 16px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .character-card {
+                width: 100px;
+            }
+            
+            .character-card img {
+                height: 100px;
+            }
+            
+            .fighter {
+                width: 46%;
+            }
+            
+            .fighter img {
+                max-width: 110px;
+            }
+        }
+        
+        /* НОВЫЕ СТИЛИ ДЛЯ НОВЫХ ФУНКЦИЙ */
+        
+        /* Прокрутка для дополнительных персонажей */
+        .characters-container {
+            width: 100%;
+            max-width: 500px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+        
+        .characters-scroll {
+            display: flex;
+            gap: 15px;
+            padding: 10px;
+            min-width: min-content;
+        }
+        
+        /* Текстовый лог боя */
+        .battle-log {
+            width: 100%;
+            max-width: 400px;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            overflow-y: auto;
+            text-align: left;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .battle-log p {
+            margin: 5px 0;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Имя персонажа над картинкой в бою */
+        .fighter-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FFD700;
+            text-align: center;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Числовое отображение HP */
+        .hp-numbers {
+            font-size: 1rem;
+            color: #fff;
+            margin-top: 5px;
+        }
+        
+        /* Способности */
+        .ability-info {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-top: 5px;
+            text-align: center;
+            max-width: 140px;
+            min-height: 30px;
+        }
+        
+        /* Анимация уменьшения HP */
+        .hp-bar-animation {
+            transition: width 0.3s ease-out;
+        }
+        
+        /* Звуки - скрытые элементы */
+        .audio-container {
+            display: none;
+        }
+        
+        /* Характеристики */
+        .character-stats {
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-top: 5px;
+        }
+        
+        /* Загрузка изображений */
+        .upload-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+        
+        .upload-btn:active {
+            background-color: #0b7dda;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .character-img-container {
+            width: 100%;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .character-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <!-- Экран выбора персонажа -->
+    <div id="selection-screen" class="screen">
+        <h1>Transformers: Choose & Battle</h1>
+        <h2>Виберіть свого трансформера</h2>
+        
+        <div class="characters-container">
+            <div class="characters-scroll">
+                <!-- Карточка Оптимуса Прайма -->
+                <div class="character-card" data-character="optimus">
+                    <div class="character-img-container">
+                        <img id="optimus-img" src="https://i.imgur.com/2nQ4BqR.png" alt="Оптимус Прайм" class="character-img">
+                    </div>
+                    <div class="character-name">Оптимус Прайм</div>
+                    <div class="ability-info">Шанс 20% подвійної шкоди</div>
+                    <button class="upload-btn" data-character="optimus">Завантажити зображення</button>
+                    <input type="file" accept="image/*" class="file-input" id="optimus-file">
+                </div>
+                
+                <!-- Карточка Бамблбі -->
+                <div class="character-card" data-character="bumblebee">
+                    <div class="character-img-container">
+                        <img id="bumblebee-img" src="https://i.imgur.com/4xqQY1t.png" alt="Бамблбі" class="character-img">
+                    </div>
+                    <div class="character-name">Бамблбі</div>
+                    <div class="ability-info">Шанс 25% ухилитися</div>
+                    <button class="upload-btn" data-character="bumblebee">Завантажити зображення</button>
+                    <input type="file" accept="image/*" class="file-input" id="bumblebee-file">
+                </div>
+                
+                <!-- Карточка Мегатрона -->
+                <div class="character-card" data-character="megatron">
+                    <div class="character-img-container">
+                        <img id="megatron-img" src="https://i.imgur.com/VgH6xyL.png" alt="Мегатрон" class="character-img">
+                    </div>
+                    <div class="character-name">Мегатрон</div>
+                    <div class="ability-info">+2 до шкоди завжди</div>
+                    <button class="upload-btn" data-character="megatron">Завантажити зображення</button>
+                    <input type="file" accept="image/*" class="file-input" id="megatron-file">
+                </div>
+                
+                <!-- Карточка Айронхайда -->
+                <div class="character-card" data-character="ironhide">
+                    <div class="character-img-container">
+                        <img id="ironhide-img" src="https://i.imgur.com/5G6L8Zy.png" alt="Айронхайд" class="character-img">
+                    </div>
+                    <div class="character-name">Айронхайд</div>
+                    <div class="ability-info">Більше HP, менша шкода</div>
+                    <button class="upload-btn" data-character="ironhide">Завантажити зображення</button>
+                    <input type="file" accept="image/*" class="file-input" id="ironhide-file">
+                </div>
+                
+                <!-- Карточка Ретчета -->
+                <div class="character-card" data-character="ratchet">
+                    <div class="character-img-container">
+                        <img id="ratchet-img" src="https://i.imgur.com/7FwD4nQ.png" alt="Ретчет" class="character-img">
+                    </div>
+                    <div class="character-name">Ретчет</div>
+                    <div class="ability-info">Може лікуватися</div>
+                    <button class="upload-btn" data-character="ratchet">Завантажити зображення</button>
+                    <input type="file" accept="image/*" class="file-input" id="ratchet-file">
+                </div>
+                
+                <!-- Карточка Старскріма -->
+                <div class="character-card" data-character="starscream">
+                    <div class="character-img-container">
+                        <img id="starscream-img" src="https://i.imgur.com/8K2Wq9r.png" alt="Старскрім" class="character-img">
+                    </div>
+                    <div class="character-name">Старскрім</div>
+                    <div class="ability-info">Шанс промаху</div>
+                    <button class="upload-btn" data-character="starscream">Завантажити зображення</button>
+                    <input type="file" accept="image/*" class="file-input" id="starscream-file">
+                </div>
+                
+                <!-- Карточка Саундвейва -->
+                <div class="character-card" data-character="soundwave">
+                    <div class="character-img-container">
+                        <img id="soundwave-img" src="https://i.imgur.com/9m7bW3s.png" alt="Саундвейв" class="character-img">
+                    </div>
+                    <div class="character-name">Саундвейв</div>
+                    <div class="ability-info">Зменшує шкоду ворога</div>
+                    <button class="upload-btn" data-character="soundwave">Завантажити зображення</button>
+                    <input type="file" accept="image/*" class="file-input" id="soundwave-file">
+                </div>
+            </div>
+        </div>
+        
+        <div class="instruction">Натисніть на картку, щоб вибрати персонажа. Використовуйте кнопку "Завантажити зображення" для додавання своїх картинок.</div>
+        
+        <button id="start-battle-btn" class="action-btn" style="margin-top: 30px; display: none;">Почати бій</button>
+    </div>
+    
+    <!-- Экран боя -->
+    <div id="battle-screen" class="screen" style="display: none;">
+        <h1>Бій Трансформерів</h1>
+        
+        <div class="battle-area">
+            <!-- Игрок -->
+            <div class="fighter player">
+                <div class="fighter-name" id="player-name"></div>
+                <div id="player-image-container"></div>
+                <div class="hp-bar-container">
+                    <div id="player-hp-bar" class="hp-bar hp-bar-animation" style="width: 100%;"></div>
+                </div>
+                <div class="hp-text">
+                    HP: <span id="player-hp-text" class="player-hp">100</span>
+                </div>
+                <div class="hp-numbers" id="player-hp-numbers">100 / 100</div>
+            </div>
+            
+            <!-- VS -->
+            <div class="vs-text">VS</div>
+            
+            <!-- Враг -->
+            <div class="fighter enemy">
+                <div class="fighter-name" id="enemy-name"></div>
+                <div id="enemy-image-container"></div>
+                <div class="hp-bar-container">
+                    <div id="enemy-hp-bar" class="hp-bar enemy-hp-bar hp-bar-animation" style="width: 100%;"></div>
+                </div>
+                <div class="hp-text">
+                    HP: <span id="enemy-hp-text" class="enemy-hp">100</span>
+                </div>
+                <div class="hp-numbers" id="enemy-hp-numbers">100 / 100</div>
+            </div>
+        </div>
+        
+        <!-- Результат боя -->
+        <div id="battle-result" class="result"></div>
+        
+        <!-- Текстовый лог боя -->
+        <div class="battle-log" id="battle-log">
+            <p>Бій розпочався!</p>
+        </div>
+        
+        <!-- Управление -->
+        <div class="controls">
+            <button id="attack-btn">Атакувати</button>
+            <button id="restart-btn" class="restart-btn">Перезапуск</button>
+            <button id="back-btn" class="back-btn">Назад до вибору</button>
+        </div>
+    </div>
+    
+    <script>
+        // Игровые данные - РАСШИРЕННЫЙ СПИСОК ПЕРСОНАЖЕЙ
+        const characters = {
+            optimus: {
+                name: "Оптимус Прайм",
+                defaultImage: "https://i.imgur.com/2nQ4BqR.png",
+                image: "https://i.imgur.com/2nQ4BqR.png",
+                maxHP: 100,
+                minDamage: 5,
+                maxDamage: 15
+            },
+            bumblebee: {
+                name: "Бамблбі",
+                defaultImage: "https://i.imgur.com/4xqQY1t.png",
+                image: "https://i.imgur.com/4xqQY1t.png",
+                maxHP: 100,
+                minDamage: 5,
+                maxDamage: 15
+            },
+            megatron: {
+                name: "Мегатрон",
+                defaultImage: "https://i.imgur.com/VgH6xyL.png",
+                image: "https://i.imgur.com/VgH6xyL.png",
+                maxHP: 100,
+                minDamage: 5,
+                maxDamage: 15
+            },
+            ironhide: {
+                name: "Айронхайд",
+                defaultImage: "https://i.imgur.com/5G6L8Zy.png",
+                image: "https://i.imgur.com/5G6L8Zy.png",
+                maxHP: 120,
+                minDamage: 3,
+                maxDamage: 12
+            },
+            ratchet: {
+                name: "Ретчет",
+                defaultImage: "https://i.imgur.com/7FwD4nQ.png",
+                image: "https://i.imgur.com/7FwD4nQ.png",
+                maxHP: 90,
+                minDamage: 6,
+                maxDamage: 16
+            },
+            starscream: {
+                name: "Старскрім",
+                defaultImage: "https://i.imgur.com/8K2Wq9r.png",
+                image: "https://i.imgur.com/8K2Wq9r.png",
+                maxHP: 85,
+                minDamage: 7,
+                maxDamage: 17
+            },
+            soundwave: {
+                name: "Саундвейв",
+                defaultImage: "https://i.imgur.com/9m7bW3s.png",
+                image: "https://i.imgur.com/9m7bW3s.png",
+                maxHP: 95,
+                minDamage: 4,
+                maxDamage: 14
+            }
+        };
+        
+        // СПОСОБНОСТИ ПЕРСОНАЖЕЙ
+        const abilities = {
+            optimus: {
+                name: "Подвійна шкода",
+                type: "damage",
+                chance: 0.2,
+                effect: function(damage) {
+                    if (Math.random() < this.chance) {
+                        damage *= 2;
+                        return { damage: damage, message: "КРИТИЧНИЙ УДАР! Подвійна шкода!" };
+                    }
+                    return { damage: damage, message: null };
+                }
+            },
+            bumblebee: {
+                name: "Ухилення",
+                type: "dodge",
+                chance: 0.25,
+                effect: function(damage) {
+                    if (Math.random() < this.chance) {
+                        return { damage: 0, message: "Бамблбі ухилився від атаки!" };
+                    }
+                    return { damage: damage, message: null };
+                }
+            },
+            megatron: {
+                name: "Посилена атака",
+                type: "buff",
+                effect: function(damage) {
+                    damage += 2;
+                    return { damage: damage, message: "Мегатрон завдає посиленої шкоди!" };
+                }
+            },
+            ironhide: {
+                name: "Броня",
+                type: "defense",
+                effect: function(damage) {
+                    damage = Math.floor(damage * 0.8);
+                    return { damage: damage, message: "Броня Айронхайда поглинає частину шкоди!" };
+                }
+            },
+            ratchet: {
+                name: "Лікування",
+                type: "heal",
+                chance: 0.15,
+                effect: function(damage) {
+                    if (Math.random() < this.chance) {
+                        return { damage: -10, message: "Ретчет лікується замість атаки!" };
+                    }
+                    return { damage: damage, message: null };
+                }
+            },
+            starscream: {
+                name: "Непостійність",
+                type: "miss",
+                chance: 0.1,
+                effect: function(damage) {
+                    if (Math.random() < this.chance) {
+                        return { damage: 0, message: "Старскрім промахнувся!" };
+                    }
+                    return { damage: damage, message: null };
+                }
+            },
+            soundwave: {
+                name: "Звуковий щит",
+                type: "debuff",
+                effect: function(damage) {
+                    damage = Math.floor(damage * 0.85);
+                    return { damage: damage, message: "Звуковий щит Саундвейва зменшує шкоду!" };
+                }
+            }
+        };
+        
+        // Игровое состояние
+        let gameState = {
+            player: null,
+            playerHp: 100,
+            playerMaxHp: 100,
+            enemy: null,
+            enemyHp: 100,
+            enemyMaxHp: 100,
+            gameOver: false
+        };
+        
+        // Лог боя
+        let battleLog = ["Бій розпочався!"];
+        
+        // DOM элементы
+        const selectionScreen = document.getElementById('selection-screen');
+        const battleScreen = document.getElementById('battle-screen');
+        const characterCards = document.querySelectorAll('.character-card');
+        const uploadButtons = document.querySelectorAll('.upload-btn');
+        const fileInputs = document.querySelectorAll('.file-input');
+        const characterImages = {
+            optimus: document.getElementById('optimus-img'),
+            bumblebee: document.getElementById('bumblebee-img'),
+            megatron: document.getElementById('megatron-img'),
+            ironhide: document.getElementById('ironhide-img'),
+            ratchet: document.getElementById('ratchet-img'),
+            starscream: document.getElementById('starscream-img'),
+            soundwave: document.getElementById('soundwave-img')
+        };
+        const startBattleBtn = document.getElementById('start-battle-btn');
+        const playerImageContainer = document.getElementById('player-image-container');
+        const enemyImageContainer = document.getElementById('enemy-image-container');
+        const playerHpBar = document.getElementById('player-hp-bar');
+        const playerHpText = document.getElementById('player-hp-text');
+        const enemyHpBar = document.getElementById('enemy-hp-bar');
+        const enemyHpText = document.getElementById('enemy-hp-text');
+        const attackBtn = document.getElementById('attack-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const backBtn = document.getElementById('back-btn');
+        const battleResult = document.getElementById('battle-result');
+        
+        // НОВЫЕ DOM ЭЛЕМЕНТЫ
+        const playerNameElement = document.getElementById('player-name');
+        const enemyNameElement = document.getElementById('enemy-name');
+        const playerHpNumbers = document.getElementById('player-hp-numbers');
+        const enemyHpNumbers = document.getElementById('enemy-hp-numbers');
+        const battleLogElement = document.getElementById('battle-log');
+        
+        // Инициализация изображений из localStorage
+        function initImagesFromStorage() {
+            Object.keys(characters).forEach(characterId => {
+                const savedImage = localStorage.getItem(`transformer_${characterId}`);
+                if (savedImage) {
+                    characters[characterId].image = savedImage;
+                    characterImages[characterId].src = savedImage;
+                }
+            });
+        }
+        
+        // Функция для сохранения изображения в localStorage
+        function saveImageToStorage(characterId, imageData) {
+            try {
+                localStorage.setItem(`transformer_${characterId}`, imageData);
+            } catch (e) {
+                console.error('Помилка при збереженні:', e);
+                if (e.name === 'QuotaExceededError') {
+                    localStorage.clear();
+                    localStorage.setItem(`transformer_${characterId}`, imageData);
+                }
+            }
+        }
+        
+        // Функция для загрузки изображения
+        function handleImageUpload(characterId, file) {
+            if (!file || !file.type.startsWith('image/')) {
+                alert('Будь ласка, виберіть файл зображення (PNG, JPG, JPEG, GIF)');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const imageData = e.target.result;
+                
+                characterImages[characterId].src = imageData;
+                characters[characterId].image = imageData;
+                
+                saveImageToStorage(characterId, imageData);
+                
+                alert(`Зображення для ${characters[characterId].name} успішно завантажено!`);
+            };
+            
+            reader.onerror = function() {
+                alert('Помилка при завантаженні зображення. Спробуйте інший файл.');
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        // Функция для выбора случайного врага (кроме выбранного игроком)
+        function getRandomEnemy(playerChoice) {
+            const enemyOptions = Object.keys(characters).filter(char => char !== playerChoice);
+            const randomIndex = Math.floor(Math.random() * enemyOptions.length);
+            return enemyOptions[randomIndex];
+        }
+        
+        // Функция обновления полос здоровья
+        function updateHpBars() {
+            const playerHpPercent = (gameState.playerHp / gameState.playerMaxHp) * 100;
+            playerHpBar.style.width = `${playerHpPercent}%`;
+            playerHpText.textContent = gameState.playerHp;
+            playerHpNumbers.textContent = `${gameState.playerHp} / ${gameState.playerMaxHp}`;
+            
+            const enemyHpPercent = (gameState.enemyHp / gameState.enemyMaxHp) * 100;
+            enemyHpBar.style.width = `${enemyHpPercent}%`;
+            enemyHpText.textContent = gameState.enemyHp;
+            enemyHpNumbers.textContent = `${gameState.enemyHp} / ${gameState.enemyMaxHp}`;
+        }
+        
+        // Функция добавления записи в лог
+        function addToLog(message) {
+            battleLog.unshift(message);
+            if (battleLog.length > 6) {
+                battleLog.pop();
+            }
+            
+            battleLogElement.innerHTML = '';
+            battleLog.forEach(logEntry => {
+                const p = document.createElement('p');
+                p.textContent = logEntry;
+                battleLogElement.appendChild(p);
+            });
+        }
+        
+        // Функция проверки конца игры
+        function checkGameOver() {
+            if (gameState.enemyHp <= 0) {
+                gameState.enemyHp = 0;
+                gameState.gameOver = true;
+                battleResult.textContent = "Перемога!";
+                battleResult.className = "result victory";
+                attackBtn.disabled = true;
+                addToLog("🎉 Ви перемогли!");
+                return true;
+            }
+            
+            if (gameState.playerHp <= 0) {
+                gameState.playerHp = 0;
+                gameState.gameOver = true;
+                battleResult.textContent = "Поразка!";
+                battleResult.className = "result defeat";
+                attackBtn.disabled = true;
+                addToLog("💥 Ви програли!");
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // Функция применения способности
+        function applyAbility(characterId, damage, isPlayer) {
+            const ability = abilities[characterId];
+            if (!ability) return { damage: damage, message: null };
+            
+            const result = ability.effect(damage);
+            
+            if (result.message) {
+                const prefix = isPlayer ? "Гравець: " : "Ворог: ";
+                addToLog(prefix + result.message);
+            }
+            
+            return result;
+        }
+        
+        // Функция атаки игрока
+        function playerAttack() {
+            if (gameState.gameOver) return;
+            
+            // Игрок атакует врага
+            const minDamage = characters[gameState.player].minDamage;
+            const maxDamage = characters[gameState.player].maxDamage;
+            let playerDamage = Math.floor(Math.random() * (maxDamage - minDamage + 1)) + minDamage;
+            
+            // Применяем способность игрока
+            const playerAbilityResult = applyAbility(gameState.player, playerDamage, true);
+            playerDamage = playerAbilityResult.damage;
+            
+            // Если damage отрицательный, это лечение
+            if (playerDamage < 0) {
+                gameState.playerHp = Math.min(gameState.playerMaxHp, gameState.playerHp - playerDamage);
+                addToLog(`${characters[gameState.player].name} відновлює ${-playerDamage} HP!`);
+            } else {
+                // Применяем способность врага на защиту
+                const enemyDefenseResult = applyAbility(gameState.enemy, playerDamage, false);
+                playerDamage = enemyDefenseResult.damage;
+                
+                gameState.enemyHp -= playerDamage;
+                
+                if (gameState.enemyHp < 0) gameState.enemyHp = 0;
+                
+                addToLog(`${characters[gameState.player].name} атакував і завдав ${playerDamage} шкоди`);
+            }
+            
+            // Обновляем интерфейс
+            updateHpBars();
+            
+            // Проверяем, не победил ли игрок
+            if (checkGameOver()) return;
+            
+            // Враг атакует игрока
+            setTimeout(() => {
+                if (gameState.gameOver) return;
+                
+                const enemyMinDamage = characters[gameState.enemy].minDamage;
+                const enemyMaxDamage = characters[gameState.enemy].maxDamage;
+                let enemyDamage = Math.floor(Math.random() * (enemyMaxDamage - enemyMinDamage + 1)) + enemyMinDamage;
+                
+                // Применяем способность врага
+                const enemyAbilityResult = applyAbility(gameState.enemy, enemyDamage, false);
+                enemyDamage = enemyAbilityResult.damage;
+                
+                // Если damage отрицательный, это лечение
+                if (enemyDamage < 0) {
+                    gameState.enemyHp = Math.min(gameState.enemyMaxHp, gameState.enemyHp - enemyDamage);
+                    addToLog(`${characters[gameState.enemy].name} відновлює ${-enemyDamage} HP!`);
+                } else {
+                    // Применяем способность игрока на защиту
+                    const playerDefenseResult = applyAbility(gameState.player, enemyDamage, true);
+                    enemyDamage = playerDefenseResult.damage;
+                    
+                    gameState.playerHp -= enemyDamage;
+                    
+                    if (gameState.playerHp < 0) gameState.playerHp = 0;
+                    
+                    addToLog(`${characters[gameState.enemy].name} відповів і завдав ${enemyDamage} шкоди`);
+                }
+                
+                // Обновляем интерфейс
+                updateHpBars();
+                
+                // Проверяем, не проиграл ли игрок
+                checkGameOver();
+            }, 300);
+        }
+        
+        // Функция перезапуска игры
+        function restartGame() {
+            // Сбрасываем состояние игры
+            gameState.playerHp = gameState.playerMaxHp;
+            gameState.enemyHp = gameState.enemyMaxHp;
+            gameState.gameOver = false;
+            
+            // Сбрасываем лог
+            battleLog = ["Бій розпочався знову!"];
+            addToLog("Бій розпочався знову!");
+            
+            // Обновляем интерфейс
+            updateHpBars();
+            
+            // Сбрасываем результат боя
+            battleResult.textContent = "";
+            battleResult.className = "result";
+            
+            // Включаем кнопку атаки
+            attackBtn.disabled = false;
+        }
+        
+        // Функция начала боя
+        function startBattle() {
+            if (!gameState.player) {
+                alert("Будь ласка, виберіть персонажа!");
+                return;
+            }
+            
+            // Выбираем случайного врага
+            gameState.enemy = getRandomEnemy(gameState.player);
+            gameState.enemyMaxHp = characters[gameState.enemy].maxHP || 100;
+            gameState.enemyHp = gameState.enemyMaxHp;
+            
+            // Отображаем персонажей на экране боя
+            playerImageContainer.innerHTML = `<img src="${characters[gameState.player].image}" alt="${characters[gameState.player].name}">`;
+            enemyImageContainer.innerHTML = `<img src="${characters[gameState.enemy].image}" alt="${characters[gameState.enemy].name}">`;
+            
+            // Отображаем имена персонажей
+            playerNameElement.textContent = characters[gameState.player].name;
+            enemyNameElement.textContent = characters[gameState.enemy].name;
+            
+            // Сбрасываем состояние игры
+            restartGame();
+            
+            // Переключаем экран
+            selectionScreen.style.display = 'none';
+            battleScreen.style.display = 'flex';
+        }
+        
+        // Функция возврата к выбору персонажа
+        function goToSelection() {
+            battleScreen.style.display = 'none';
+            selectionScreen.style.display = 'flex';
+        }
+        
+        // Инициализация при загрузке страницы
+        function init() {
+            // Загружаем сохраненные изображения из localStorage
+            initImagesFromStorage();
+            
+            // Назначаем обработчики событий для выбора персонажа
+            characterCards.forEach(card => {
+                card.addEventListener('click', function(e) {
+                    // Не обрабатываем клик, если он был на кнопке загрузки
+                    if (e.target.classList.contains('upload-btn')) {
+                        return;
+                    }
+                    
+                    // Сохраняем выбранного персонажа
+                    gameState.player = this.getAttribute('data-character');
+                    gameState.playerMaxHp = characters[gameState.player].maxHP || 100;
+                    gameState.playerHp = gameState.playerMaxHp;
+                    
+                    // Показываем кнопку начала боя
+                    startBattleBtn.style.display = 'block';
+                });
+            });
+            
+            // Назначаем обработчики для кнопок загрузки изображений
+            uploadButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const characterId = this.getAttribute('data-character');
+                    const fileInput = document.getElementById(`${characterId}-file`);
+                    fileInput.click();
+                });
+            });
+            
+            // Назначаем обработчики для input файлов
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const characterId = this.id.replace('-file', '');
+                    const file = this.files[0];
+                    
+                    if (file) {
+                        handleImageUpload(characterId, file);
+                    }
+                    
+                    this.value = '';
+                });
+            });
+            
+            // Назначаем обработчики событий для кнопок
+            startBattleBtn.addEventListener('click', startBattle);
+            attackBtn.addEventListener('click', playerAttack);
+            restartBtn.addEventListener('click', restartGame);
+            backBtn.addEventListener('click', goToSelection);
+            
+            // Для мобильных устройств: обработка touch событий
+            attackBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                playerAttack();
+            });
+            
+            restartBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                restartGame();
+            });
+            
+            backBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                goToSelection();
+            });
+            
+            // Обработка touch для карточек персонажей
+            characterCards.forEach(card => {
+                card.addEventListener('touchstart', function(e) {
+                    if (e.target.classList.contains('upload-btn')) {
+                        return;
+                    }
+                    
+                    e.preventDefault();
+                    
+                    gameState.player = this.getAttribute('data-character');
+                    gameState.playerMaxHp = characters[gameState.player].maxHP || 100;
+                    gameState.playerHp = gameState.playerMaxHp;
+                    
+                    startBattleBtn.style.display = 'block';
+                });
+            });
+            
+            // Обработка touch для кнопок загрузки
+            uploadButtons.forEach(button => {
+                button.addEventListener('touchstart', function(e) {
+                    e.stopPropagation();
+                    const characterId = this.getAttribute('data-character');
+                    const fileInput = document.getElementById(`${characterId}-file`);
+                    fileInput.click();
+                });
+            });
+            
+            // Обработка touch для кнопки начала боя
+            startBattleBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                startBattle();
+            });
+            
+            // Инициализация лога
+            addToLog("Бій розпочався!");
+        }
+        
+        // Инициализируем игру при загрузке страницы
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
