@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error 4 · центр но выше</title>
+    <style>
+        /* Полное обнуление, без скролла */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, 'Lucida Grande', 'DejaVu Sans', 'Bitstream Vera Sans', Verdana, sans-serif;
+        }
+
+        body {
+            color: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Контейнер с текстом — ровно по центру экрана, но поднят выше */
+        .centered-higher {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -350%);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            z-index: 5;
+        }
+
+        .error-code {
+            font-size: 32px;
+            font-weight: 500;
+            line-height: 1.2;
+            margin-bottom: 6px;
+            user-select: none;
+        }
+        
+        /* Отдельный элемент для цифры, которую будем переворачивать */
+        .error-number {
+            display: inline-block;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            transform-origin: center center;
+            min-width: 24px;
+            text-align: center;
+        }
+        
+        /* Когда достигли Error 6 - цифра мёртвая, без анимаций */
+        .error-number.finished {
+            cursor: default;
+            transition: none;
+            transform: none !important;
+        }
+
+        .support-line {
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        /* Белый текст GMPXFS чуть ниже - без теней */
+        .white-text {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -800%);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 400;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            z-index: 20;
+            pointer-events: none;
+            user-select: text;
+        }
+        
+        /* Белый текст MORSE - для Error 5 */
+        .morse-white-text {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -400%);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 400;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            z-index: 25;
+            pointer-events: auto;
+            user-select: text;
+            padding: 10px 0;
+            cursor: text;
+        }
+
+        /* Кнопка-иконка в правом верхнем углу */
+        .support-button {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            border: 1px solid #aaaaaa;
+            border-radius: 50%;
+            background-color: #f2f2f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.1s;
+            box-shadow: none;
+            outline: none;
+            z-index: 30;
+        }
+
+        .support-button:hover {
+            background-color: #e0e0e0;
+        }
+
+        .support-button:active {
+            background-color: #c0c0c0;
+        }
+
+        .support-button img {
+            width: 30px;
+            height: 30px;
+            display: block;
+            filter: brightness(0.2);
+        }
+
+        /* Контейнер для цветков внизу - по умолчанию скрыт */
+        .flowers-container {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 80px;
+            z-index: 15;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        
+        .flowers-container.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Цветок внизу страницы - просто символ ✿ */
+        .flower-symbol {
+            font-size: 48px;
+            cursor: pointer;
+            user-select: none;
+            color: #000000;
+            transition: opacity 0.1s, transform 0.2s;
+        }
+        
+        .flower-symbol:hover {
+            transform: scale(1.1);
+        }
+
+        .flower-symbol:active {
+            opacity: 0.7;
+        }
+
+        /* Модальное окно ввода */
+        .custom-prompt {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.2s, opacity 0.2s;
+            font-family: 'Segoe UI', 'Tahoma', sans-serif;
+            z-index: 100;
+        }
+
+        .custom-prompt.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .prompt-box {
+            background: #ffffff;
+            border: 2px solid #1e3a5f;
+            outline: 1px solid #c0c0c0;
+            padding: 24px 28px 28px 28px;
+            max-width: 380px;
+            width: 90%;
+            text-align: left;
+            background-color: #fefefe;
+        }
+
+        .prompt-box p {
+            font-size: 18px;
+            margin-bottom: 18px;
+            color: #000;
+        }
+
+        .prompt-box input {
+            width: 100%;
+            padding: 10px 8px;
+            font-size: 16px;
+            border: 1px solid #7f9db9;
+            background: #fff;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .prompt-box button {
+            background-color: #dbeaf5;
+            border: 1px solid #1e3a5f;
+            padding: 10px 34px;
+            font-size: 17px;
+            font-weight: 500;
+            color: #000;
+            cursor: pointer;
+            float: right;
+        }
+
+        .prompt-box button:hover {
+            background-color: #b9d5f0;
+        }
+
+        /* Второе окно — кастомный alert */
+        .custom-alert {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.2s, opacity 0.2s;
+            z-index: 110;
+        }
+
+        .custom-alert.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .alert-box {
+            background: #fff6f6;
+            border: 2px solid #9e2b2b;
+            outline: 1px solid #d4b5b5;
+            padding: 28px 32px 32px 32px;
+            max-width: 360px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .alert-box h2 {
+            font-size: 42px;
+            font-weight: 600;
+            color: #7a1f1f;
+            line-height: 1.1;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .alert-box p {
+            font-size: 18px;
+            color: #1e1e1e;
+            margin-bottom: 28px;
+            border-top: 1px solid #c0a0a0;
+            padding-top: 16px;
+        }
+
+        .alert-box button {
+            background-color: #e1e1e1;
+            border: 1px solid #5f3e3e;
+            padding: 8px 34px;
+            font-size: 17px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .alert-box button:hover {
+            background-color: #d0d0d0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Текст по центру, но выше -->
+    <div class="centered-higher">
+        <div class="error-code" id="errorCode">
+            Error <span class="error-number" id="errorNumber">4</span>
+        </div>
+        <div class="support-line" id="supportMessage">Please write to support</div>
+    </div>
+
+    <!-- Белый текст GMPXFS чуть ниже -->
+    <div class="white-text" id="whiteText">GMPXFS</div>
+    
+    <!-- Белый текст MORSE - для Error 5 -->
+    <div class="morse-white-text" id="morseWhiteText"></div>
+
+    <!-- Кнопка с иконкой поддержки -->
+    <div class="support-button" id="supportIcon">
+        <img src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/headset.svg" alt="support">
+    </div>
+
+    <!-- Контейнер с цветками внизу (скрыт по умолчанию) -->
+    <div class="flowers-container" id="flowersContainer">
+        <div class="flower-symbol" id="resetAllFlower">✿</div>
+        <div class="flower-symbol" id="flowerSymbol">✿</div>
+        <div class="flower-symbol" id="undoFlower">✿</div>
+    </div>
+
+    <!-- Модалка 1: поле ввода -->
+    <div class="custom-prompt" id="promptModal">
+        <div class="prompt-box">
+            <p>Write your question to support:</p>
+            <input type="text" id="supportInput" placeholder="type here..." autocomplete="off">
+            <div>
+                <button id="submitQuestion">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка 2: кастомный Error 1 alert -->
+    <div class="custom-alert" id="errorAlertModal">
+        <div class="alert-box">
+            <h2 id="alertTitle">Error 1</h2>
+            <p id="alertMessage">Support is not responding right now, come back later.</p>
+            <button id="closeErrorAlert">OK</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const supportBtn = document.getElementById('supportIcon');
+            const promptModal = document.getElementById('promptModal');
+            const errorModal = document.getElementById('errorAlertModal');
+            const submitBtn = document.getElementById('submitQuestion');
+            const inputField = document.getElementById('supportInput');
+            const closeErrorBtn = document.getElementById('closeErrorAlert');
+            const flowerSymbol = document.getElementById('flowerSymbol');
+            const resetAllFlower = document.getElementById('resetAllFlower');
+            const undoFlower = document.getElementById('undoFlower');
+            const flowersContainer = document.getElementById('flowersContainer');
+            const morseWhiteText = document.getElementById('morseWhiteText');
+            
+            // Элементы для изменения текста
+            const errorNumberEl = document.getElementById('errorNumber');
+            const supportMessageEl = document.getElementById('supportMessage');
+            const whiteTextEl = document.getElementById('whiteText');
+            const alertTitleEl = document.getElementById('alertTitle');
+            const alertMessageEl = document.getElementById('alertMessage');
+
+            // Состояние
+            let flowerCount = 0;
+            let needRestReached = false;
+            let restedReached = false;
+            let morseCodeCompleted = false;
+            let error9ClickCount = 0;
+            let error6Reached = false;
+            
+            // Константа: 50 нажатий для переворота 9 в 6
+            const CLICKS_TO_TURN = 50;
+            
+            // Аудио контекст
+            let audioContext = null;
+            
+            // Переменные для долгого нажатия
+            let pressTimer = null;
+            let isPressing = false;
+            let longPressTriggered = false;
+            const LONG_PRESS_DURATION = 500;
+
+            // Переменные для морзянки
+            let morseSequence = [];
+            
+            // Целевая последовательность: -- --- .-. ... . (MORSE)
+            const targetSequence = ['-', '-', '-', '-', '-', '.', '-', '.', '.', '.', '.', '.'];
+
+            // Функция для инициализации аудио
+            function initAudio() {
+                if (audioContext) return;
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Web Audio API не поддерживается');
+                }
+            }
+
+            // Функция для воспроизведения звука
+            function playSound(duration, type = 'normal') {
+                if (!audioContext) {
+                    initAudio();
+                }
+                
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume().then(() => {
+                        playTone(duration, type);
+                    });
+                } else if (audioContext) {
+                    playTone(duration, type);
+                }
+            }
+
+            function playTone(duration, type = 'normal') {
+                if (!audioContext) return;
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                switch(type) {
+                    case 'reset':
+                        oscillator.type = 'sawtooth';
+                        oscillator.frequency.value = 98.00;
+                        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+                        break;
+                        
+                    case 'undo':
+                        oscillator.type = 'square';
+                        oscillator.frequency.value = 130.81;
+                        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+                        break;
+
+                    case 'click':
+                        oscillator.type = 'sine';
+                        oscillator.frequency.value = 2000;
+                        gainNode.gain.setValueAtTime(0.02, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+                        break;
+                        
+                    default:
+                        oscillator.type = 'sine';
+                        oscillator.frequency.value = 783.99;
+                        gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.08, audioContext.currentTime + duration - 0.01);
+                        gainNode.gain.setValueAtTime(0, audioContext.currentTime + duration);
+                        break;
+                }
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + duration);
+            }
+
+            // Функция для проверки последовательности морзе
+            function checkMorseSequence() {
+                if (morseSequence.length === targetSequence.length) {
+                    let isMatch = true;
+                    for (let i = 0; i < targetSequence.length; i++) {
+                        if (morseSequence[i] !== targetSequence[i]) {
+                            isMatch = false;
+                            break;
+                        }
+                    }
+                    
+                    if (isMatch) {
+                        console.log('Правильная последовательность MORSE! Error 9!');
+                        morseCodeCompleted = true;
+                        error9ClickCount = 0;
+                        errorNumberEl.style.transform = 'rotate(0deg)';
+                        errorNumberEl.classList.remove('finished');
+                        updateDisplay();
+                    }
+                }
+            }
+
+            // Обработчик кликов по цифре 9
+            function handleNumberClick(e) {
+                if (!morseCodeCompleted || error6Reached) return;
+                
+                error9ClickCount++;
+                
+                // Каждое нажатие поворачивает на 3.6 градуса (180° / 50 нажатий)
+                const rotation = error9ClickCount * 3.6;
+                errorNumberEl.style.transform = `rotate(${rotation}deg)`;
+                
+                // Тихий щелчок
+                playSound(0.02, 'click');
+                
+                console.log(`Нажатие ${error9ClickCount}/${CLICKS_TO_TURN}, поворот: ${rotation}°`);
+                
+                if (error9ClickCount >= CLICKS_TO_TURN) {
+                    console.log('Error 6 достигнут!');
+                    error6Reached = true;
+                    morseCodeCompleted = false;
+                    updateDisplay();
+                }
+                
+                saveState();
+            }
+
+            // Обработчики для долгого нажатия на цветок
+            function startPress(e) {
+                e.preventDefault();
+                
+                if (isPressing) return;
+                
+                isPressing = true;
+                longPressTriggered = false;
+                
+                pressTimer = setTimeout(() => {
+                    if (isPressing) {
+                        longPressTriggered = true;
+                        playSound(0.4, 'normal');
+                        
+                        morseSequence.push('-');
+                        console.log('Добавлено тире, последовательность:', morseSequence.join(''));
+                        
+                        checkMorseSequence();
+                    }
+                }, LONG_PRESS_DURATION);
+            }
+
+            function endPress(e) {
+                e.preventDefault();
+                
+                if (pressTimer) {
+                    clearTimeout(pressTimer);
+                    pressTimer = null;
+                }
+                
+                if (isPressing && !longPressTriggered) {
+                    playSound(0.1, 'normal');
+                    
+                    morseSequence.push('.');
+                    console.log('Добавлена точка, последовательность:', morseSequence.join(''));
+                    
+                    checkMorseSequence();
+                }
+                
+                isPressing = false;
+                longPressTriggered = false;
+            }
+
+            // Обработчик для левого цветка (полный сброс)
+            function resetAllSequence(e) {
+                e.preventDefault();
+                
+                resetAllFlower.style.opacity = '0.5';
+                setTimeout(() => {
+                    resetAllFlower.style.opacity = '1';
+                }, 100);
+                
+                morseSequence = [];
+                playSound(0.5, 'reset');
+                
+                console.log('Морзянка полностью сброшена');
+            }
+
+            // Обработчик для правого цветка (отмена последнего звука)
+            function undoLastSound(e) {
+                e.preventDefault();
+                
+                undoFlower.style.opacity = '0.5';
+                setTimeout(() => {
+                    undoFlower.style.opacity = '1';
+                }, 100);
+                
+                if (morseSequence.length > 0) {
+                    const removed = morseSequence.pop();
+                    console.log('Удален последний звук:', removed, 'новая последовательность:', morseSequence.join(''));
+                    playSound(0.4, 'undo');
+                } else {
+                    console.log('Нечего удалять');
+                    playSound(0.2, 'reset');
+                }
+            }
+
+            // Загружаем сохраненное состояние
+            function loadState() {
+                const savedState = localStorage.getItem('flowerGameState');
+                if (savedState) {
+                    try {
+                        const state = JSON.parse(savedState);
+                        
+                        flowerCount = state.flowerCount || 0;
+                        needRestReached = state.needRestReached || false;
+                        restedReached = state.restedReached || false;
+                        morseCodeCompleted = state.morseCodeCompleted || false;
+                        error9ClickCount = state.error9ClickCount || 0;
+                        error6Reached = state.error6Reached || false;
+                        
+                        updateDisplay();
+                    } catch (e) {
+                        console.error('Ошибка загрузки состояния', e);
+                    }
+                }
+            }
+
+            // Сохраняем состояние
+            function saveState() {
+                const state = {
+                    flowerCount: flowerCount,
+                    needRestReached: needRestReached,
+                    restedReached: restedReached,
+                    morseCodeCompleted: morseCodeCompleted,
+                    error9ClickCount: error9ClickCount,
+                    error6Reached: error6Reached
+                };
+                localStorage.setItem('flowerGameState', JSON.stringify(state));
+            }
+
+            // Функция для обновления отображения
+            function updateDisplay() {
+                // Error 6 - мёртвое состояние, никаких анимаций
+                if (error6Reached) {
+                    errorNumberEl.textContent = '6';
+                    supportMessageEl.textContent = 'coming soon';
+                    whiteTextEl.textContent = '';
+                    morseWhiteText.textContent = '';
+                    flowersContainer.classList.remove('visible');
+                    
+                    // Убираем всё живое
+                    errorNumberEl.style.cursor = 'default';
+                    errorNumberEl.style.transform = 'none';
+                    errorNumberEl.style.transition = 'none';
+                    errorNumberEl.classList.add('finished');
+                    
+                    saveState();
+                    return;
+                }
+                
+                // Error 9 - только здесь цифра живая и крутится
+                if (morseCodeCompleted) {
+                    errorNumberEl.textContent = '9';
+                    supportMessageEl.textContent = 'Vice versa';
+                    whiteTextEl.textContent = '';
+                    morseWhiteText.textContent = '';
+                    flowersContainer.classList.remove('visible');
+                    
+                    errorNumberEl.style.cursor = 'pointer';
+                    errorNumberEl.style.transition = 'transform 0.1s ease';
+                    errorNumberEl.classList.remove('finished');
+                    
+                    // Восстанавливаем поворот, если были нажатия
+                    if (error9ClickCount > 0) {
+                        errorNumberEl.style.transform = `rotate(${error9ClickCount * 3.6}deg)`;
+                    } else {
+                        errorNumberEl.style.transform = 'none';
+                    }
+                    
+                    saveState();
+                    return;
+                }
+                
+                // Error 5 - цветы и MORSE
+                if (restedReached) {
+                    errorNumberEl.textContent = '5';
+                    supportMessageEl.textContent = 'Beautiful flower!';
+                    whiteTextEl.textContent = '';
+                    morseWhiteText.textContent = 'MORSE';
+                    flowersContainer.classList.add('visible');
+                    
+                    errorNumberEl.style.cursor = 'default';
+                    errorNumberEl.style.transform = 'none';
+                    errorNumberEl.style.transition = 'none';
+                    errorNumberEl.classList.remove('finished');
+                    
+                    saveState();
+                    return;
+                }
+                
+                // Error 3 - нужен отдых
+                if (needRestReached) {
+                    errorNumberEl.textContent = '3';
+                    
+                    const hasRefreshed = sessionStorage.getItem('pageRefreshed');
+                    
+                    if (hasRefreshed === 'true') {
+                        restedReached = true;
+                        needRestReached = false;
+                        sessionStorage.removeItem('pageRefreshed');
+                        updateDisplay();
+                        return;
+                    } else {
+                        supportMessageEl.textContent = 'Enough flowers, they need to rest';
+                    }
+                    
+                    whiteTextEl.textContent = '';
+                    morseWhiteText.textContent = '';
+                    flowersContainer.classList.remove('visible');
+                    
+                    errorNumberEl.style.cursor = 'default';
+                    errorNumberEl.style.transform = 'none';
+                    errorNumberEl.style.transition = 'none';
+                    errorNumberEl.classList.remove('finished');
+                    
+                    saveState();
+                    return;
+                }
+                
+                // Базовые состояния Error 4 / Error 2
+                switch(flowerCount) {
+                    case 0:
+                        errorNumberEl.textContent = '4';
+                        supportMessageEl.textContent = 'Please write to support';
+                        whiteTextEl.textContent = 'GMPXFS';
+                        morseWhiteText.textContent = '';
+                        break;
+                    case 1:
+                        errorNumberEl.textContent = '2';
+                        supportMessageEl.textContent = 'Not enough flowers';
+                        whiteTextEl.textContent = '';
+                        morseWhiteText.textContent = '';
+                        break;
+                    case 2:
+                        errorNumberEl.textContent = '2';
+                        supportMessageEl.textContent = 'Still lack of flowers';
+                        whiteTextEl.textContent = '';
+                        morseWhiteText.textContent = '';
+                        break;
+                    default:
+                        if (flowerCount >= 3) {
+                            needRestReached = true;
+                            updateDisplay();
+                            return;
+                        }
+                        break;
+                }
+                
+                flowersContainer.classList.remove('visible');
+                errorNumberEl.style.cursor = 'default';
+                errorNumberEl.style.transform = 'none';
+                errorNumberEl.style.transition = 'none';
+                errorNumberEl.classList.remove('finished');
+                saveState();
+            }
+
+            // Функция для сброса прогресса
+            function resetProgress() {
+                flowerCount = 0;
+                needRestReached = false;
+                restedReached = false;
+                morseCodeCompleted = false;
+                error9ClickCount = 0;
+                error6Reached = false;
+                sessionStorage.removeItem('pageRefreshed');
+                
+                morseSequence = [];
+                errorNumberEl.style.transform = 'none';
+                errorNumberEl.style.transition = 'none';
+                errorNumberEl.classList.remove('finished');
+                
+                updateDisplay();
+                console.log('Прогресс сброшен командой reset000');
+            }
+
+            function openPrompt() {
+                promptModal.classList.add('active');
+                inputField.value = '';
+                inputField.focus();
+            }
+
+            function closePrompt() {
+                promptModal.classList.remove('active');
+            }
+
+            function showErrorAlert() {
+                errorModal.classList.add('active');
+            }
+
+            function closeErrorAlert() {
+                errorModal.classList.remove('active');
+            }
+
+            // Загружаем состояние
+            loadState();
+
+            // Устанавливаем флаг перезахода страницы
+            if (needRestReached && !restedReached) {
+                sessionStorage.setItem('pageRefreshed', 'true');
+                updateDisplay();
+            }
+
+            // Обработчики событий
+            supportBtn.addEventListener('click', openPrompt);
+
+            // Обработчик клика по цифре
+            errorNumberEl.addEventListener('click', handleNumberClick);
+
+            submitBtn.addEventListener('click', function() {
+                const userInput = inputField.value.trim();
+                
+                if (userInput === '') {
+                    closePrompt();
+                    return;
+                }
+
+                if (userInput === 'reset000') {
+                    resetProgress();
+                    closePrompt();
+                    return;
+                }
+
+                if (userInput === 'FLOWER') {
+                    
+                    if (restedReached || morseCodeCompleted || error6Reached) {
+                        closePrompt();
+                        alertTitleEl.textContent = 'Error 1';
+                        alertMessageEl.textContent = 'Support is not responding right now, come back later.';
+                        setTimeout(() => {
+                            showErrorAlert();
+                        }, 30);
+                        return;
+                    }
+                    
+                    if (needRestReached) {
+                        closePrompt();
+                        alertTitleEl.textContent = 'Error 1';
+                        alertMessageEl.textContent = 'Support is not responding right now, come back later.';
+                        setTimeout(() => {
+                            showErrorAlert();
+                        }, 30);
+                        return;
+                    }
+                    
+                    flowerCount++;
+                    
+                    if (flowerCount === 3) {
+                        needRestReached = true;
+                        updateDisplay();
+                    } else {
+                        updateDisplay();
+                    }
+                    
+                    closePrompt();
+                    
+                } else {
+                    closePrompt();
+                    alertTitleEl.textContent = 'Error 1';
+                    alertMessageEl.textContent = 'Support is not responding right now, come back later.';
+                    setTimeout(() => {
+                        showErrorAlert();
+                    }, 30);
+                }
+            });
+
+            // Обработчики для цветков
+            flowerSymbol.addEventListener('mousedown', startPress);
+            flowerSymbol.addEventListener('mouseup', endPress);
+            flowerSymbol.addEventListener('mouseleave', endPress);
+            
+            flowerSymbol.addEventListener('touchstart', startPress, { passive: false });
+            flowerSymbol.addEventListener('touchend', endPress);
+            flowerSymbol.addEventListener('touchcancel', endPress);
+
+            resetAllFlower.addEventListener('mousedown', resetAllSequence);
+            resetAllFlower.addEventListener('touchstart', resetAllSequence, { passive: false });
+
+            undoFlower.addEventListener('mousedown', undoLastSound);
+            undoFlower.addEventListener('touchstart', undoLastSound, { passive: false });
+
+            closeErrorBtn.addEventListener('click', closeErrorAlert);
+
+            promptModal.addEventListener('click', function(e) {
+                if (e.target === promptModal) closePrompt();
+            });
+
+            errorModal.addEventListener('click', function(e) {
+                if (e.target === errorModal) closeErrorAlert();
+            });
+
+            inputField.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitBtn.click();
+                }
+            });
+
+            flowerSymbol.addEventListener('mouseenter', function() {
+                initAudio();
+            }, { once: true });
+
+        })();
+    </script>
+</body>
+</html>
