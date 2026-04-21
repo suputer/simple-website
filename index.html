@@ -65,6 +65,11 @@
             transform: scale(0.96);
         }
 
+        button:disabled {
+            opacity: 0.6;
+            transform: none;
+        }
+
         #status {
             margin-top: 24px;
             font-size: 13px;
@@ -81,6 +86,22 @@
             font-size: 14px;
             color: #ffd700;
         }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -89,11 +110,8 @@
         <h1>Реклама</h1>
         <p>Нажми на кнопку, посмотри видео до конца и получи награду</p>
         <button id="showAdBtn">▶ Смотреть рекламу</button>
-        <div id="status">⚡ Готов к показу</div>
+        <div id="status">📡 Загрузка SDK...</div>
     </div>
-
-    <!-- Подключаем SDK AdsGram -->
-    <script src="https://adsgram.ai/js/adsgram.js"></script>
 
     <script>
         const blockId = "27460";
@@ -101,63 +119,115 @@
         const btn = document.getElementById("showAdBtn");
 
         let adController = null;
+        let sdkReady = false;
 
-        // Инициализация AdsGram (тестовый режим включен)
-        try {
-            adController = window.Adsgram.init({
-                blockId: blockId,
-                debug: true,           // тестовый режим — не пишет в статистику
-                debugConsole: true     // выводит логи в консоль браузера
-            });
-            statusDiv.innerHTML = "✅ Готово. Нажми на кнопку";
-            console.log("AdsGram инициализирован, blockId:", blockId);
-        } catch (error) {
-            statusDiv.innerHTML = "❌ Ошибка инициализации: " + error.message;
-            console.error(error);
+        // Функция для обновления статуса
+        function setStatus(text, isError = false) {
+            statusDiv.innerHTML = text;
+            if (isError) {
+                statusDiv.style.color = "rgba(255,100,100,0.8)";
+            } else {
+                statusDiv.style.color = "rgba(255,255,255,0.5)";
+            }
         }
 
-        // Обработка нажатия на кнопку
-        btn.addEventListener("click", () => {
+        // Функция инициализации AdsGram
+        function initAdsGram() {
+            if (!window.Adsgram) {
+                setStatus("❌ SDK не загрузился. Проверь интернет", true);
+                btn.disabled = true;
+                return false;
+            }
+
+            try {
+                adController = window.Adsgram.init({
+                    blockId: blockId,
+                    debug: true,
+                    debugConsole: true
+                });
+                setStatus("✅ Готово. Нажми на кнопку");
+                btn.disabled = false;
+                return true;
+            } catch (error) {
+                setStatus("❌ Ошибка: " + error.message, true);
+                btn.disabled = true;
+                return false;
+            }
+        }
+
+        // Загружаем SDK динамически
+        function loadSDK() {
+            return new Promise((resolve, reject) => {
+                if (window.Adsgram) {
+                    resolve();
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = 'https://adsgram.ai/js/adsgram.js';
+                script.onload = () => {
+                    console.log("AdsGram SDK загружен");
+                    // Даем время на инициализацию
+                    setTimeout(resolve, 100);
+                };
+                script.onerror = () => {
+                    reject(new Error("Не удалось загрузить adsgram.js"));
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        // Запуск
+        async function start() {
+            try {
+                setStatus("📡 Загрузка SDK...");
+                await loadSDK();
+                initAdsGram();
+            } catch (error) {
+                setStatus("❌ " + error.message, true);
+                btn.disabled = true;
+            }
+        }
+
+        // Показ рекламы
+        async function showAd() {
             if (!adController) {
-                statusDiv.innerHTML = "❌ Реклама не инициализирована";
+                setStatus("❌ Реклама не инициализирована", true);
                 return;
             }
 
-            statusDiv.innerHTML = "⏳ Загрузка рекламы...";
+            setStatus("⏳ Загрузка рекламы...");
             btn.disabled = true;
-            btn.style.opacity = "0.6";
 
-            adController.show()
-                .then((result) => {
-                    // Пользователь досмотрел до конца
-                    console.log("Успех:", result);
-                    statusDiv.innerHTML = "🎉 Награда выдана! +100 монет";
-                    // Тут можно добавить начисление монет/жизней/бустов
-                    showRewardEffect();
-                    setTimeout(() => {
-                        statusDiv.innerHTML = "⚡ Можно смотреть ещё";
-                    }, 2000);
-                })
-                .catch((error) => {
-                    // Пользователь закрыл раньше или ошибка
-                    console.warn("Не досмотрел или ошибка:", error);
-                    statusDiv.innerHTML = "⚠️ Реклама не досмотрена. Попробуй ещё";
-                })
-                .finally(() => {
-                    btn.disabled = false;
-                    btn.style.opacity = "1";
-                });
-        });
-
-        // Простой визуальный эффект награды
-        function showRewardEffect() {
-            const badge = document.querySelector(".reward-badge");
-            badge.style.transform = "scale(1.1)";
-            badge.style.transition = "0.2s";
-            setTimeout(() => {
-                badge.style.transform = "scale(1)";
-            }, 300);
+            try {
+                const result = await adController.show();
+                console.log("Результат:", result);
+                setStatus("🎉 Награда выдана! +100 монет");
+                
+                // Визуальный эффект
+                const badge = document.querySelector(".reward-badge");
+                badge.style.transform = "scale(1.1)";
+                badge.style.transition = "0.2s";
+                setTimeout(() => {
+                    badge.style.transform = "scale(1)";
+                }, 300);
+                
+                setTimeout(() => {
+                    if (adController) setStatus("⚡ Можно смотреть ещё");
+                }, 2000);
+            } catch (error) {
+                console.warn("Ошибка или пропуск:", error);
+                setStatus("⚠️ Реклама не досмотрена. Попробуй ещё");
+            } finally {
+                btn.disabled = false;
+            }
         }
+
+        // Вешаем обработчик
+        btn.onclick = showAd;
+
+        // Запускаем загрузку
+        start();
     </script>
 </body>
 </html>
