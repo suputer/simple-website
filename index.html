@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AdsGram Тест</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 32px 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 100%;
+            max-width: 320px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        p {
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #00c6a7 0%, #00a884 100%);
+            border: none;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 16px 32px;
+            border-radius: 48px;
+            width: 100%;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0,198,167,0.3);
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        #status {
+            margin-top: 24px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            word-break: break-word;
+        }
+
+        .reward-badge {
+            background: rgba(255,215,0,0.2);
+            border-radius: 40px;
+            padding: 8px 16px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="reward-badge">🎁 + монеты за просмотр</div>
+        <h1>Реклама</h1>
+        <p>Нажми на кнопку, посмотри видео до конца и получи награду</p>
+        <button id="showAdBtn">▶ Смотреть рекламу</button>
+        <div id="status">⚡ Готов к показу</div>
+    </div>
+
+    <!-- Подключаем SDK AdsGram -->
+    <script src="https://adsgram.ai/js/adsgram.js"></script>
+
+    <script>
+        const blockId = "27460";
+        const statusDiv = document.getElementById("status");
+        const btn = document.getElementById("showAdBtn");
+
+        let adController = null;
+
+        // Инициализация AdsGram (тестовый режим включен)
+        try {
+            adController = window.Adsgram.init({
+                blockId: blockId,
+                debug: true,           // тестовый режим — не пишет в статистику
+                debugConsole: true     // выводит логи в консоль браузера
+            });
+            statusDiv.innerHTML = "✅ Готово. Нажми на кнопку";
+            console.log("AdsGram инициализирован, blockId:", blockId);
+        } catch (error) {
+            statusDiv.innerHTML = "❌ Ошибка инициализации: " + error.message;
+            console.error(error);
+        }
+
+        // Обработка нажатия на кнопку
+        btn.addEventListener("click", () => {
+            if (!adController) {
+                statusDiv.innerHTML = "❌ Реклама не инициализирована";
+                return;
+            }
+
+            statusDiv.innerHTML = "⏳ Загрузка рекламы...";
+            btn.disabled = true;
+            btn.style.opacity = "0.6";
+
+            adController.show()
+                .then((result) => {
+                    // Пользователь досмотрел до конца
+                    console.log("Успех:", result);
+                    statusDiv.innerHTML = "🎉 Награда выдана! +100 монет";
+                    // Тут можно добавить начисление монет/жизней/бустов
+                    showRewardEffect();
+                    setTimeout(() => {
+                        statusDiv.innerHTML = "⚡ Можно смотреть ещё";
+                    }, 2000);
+                })
+                .catch((error) => {
+                    // Пользователь закрыл раньше или ошибка
+                    console.warn("Не досмотрел или ошибка:", error);
+                    statusDiv.innerHTML = "⚠️ Реклама не досмотрена. Попробуй ещё";
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.style.opacity = "1";
+                });
+        });
+
+        // Простой визуальный эффект награды
+        function showRewardEffect() {
+            const badge = document.querySelector(".reward-badge");
+            badge.style.transform = "scale(1.1)";
+            badge.style.transition = "0.2s";
+            setTimeout(() => {
+                badge.style.transform = "scale(1)";
+            }, 300);
+        }
+    </script>
+</body>
+</html>
